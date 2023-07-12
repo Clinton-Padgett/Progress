@@ -1,4 +1,4 @@
-package com.padgett.progress.ui.dashboard
+package com.padgett.progress.ui.notes
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.padgett.progress.databinding.FragmentDashboardBinding
 
-class DashboardFragment : Fragment() {
+class NotesFragment : Fragment() {
 
     private var _binding: FragmentDashboardBinding? = null
 
@@ -22,14 +22,14 @@ class DashboardFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val dashboardViewModel =
-            ViewModelProvider(this).get(DashboardViewModel::class.java)
+        val notesViewModel =
+            ViewModelProvider(this).get(NotesViewModel::class.java)
 
         _binding = FragmentDashboardBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
         val textView: TextView = binding.textDashboard
-        dashboardViewModel.text.observe(viewLifecycleOwner) {
+        notesViewModel.text.observe(viewLifecycleOwner) {
             textView.text = it
         }
         return root
