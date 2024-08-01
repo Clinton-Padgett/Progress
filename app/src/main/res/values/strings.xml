@@ -1,6 +1,29 @@
 <resources>
-    <string name="app_name">Progress</string>
-    <string name="title_tasks">Tasks</string>
-    <string name="title_notes">Notes</string>
-    <string name="title_stats">Stats</string>
+    <string name="app_name">Progress Notes</string>
+
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="yes">Yes</string>
+    <string name="select">Select</string>
+    <string name="okay">Okay</string>
+    <string name="go_back">Go back</string>
+    <string name="continue_button">Continue</string>
+
+    <!-- Error messages -->
+    <string name="error_generic">Something went wrong, please try again.</string>
+    <string name="error_phone_number_invalid">Invalid number entered. Please try again.</string>
+    <string name="error_too_many_requests">Too many failed attempts. Please try again later.</string>
+    <string name="error_name_required">Name must not be blank</string>
+
+    <!-- Phone Sign In Screen -->
+    <string name="phone_sign_in_screen_title">Sign in to get started</string>
+    <string name="phone_sign_in_screen_message">Enter your mobile number</string>
+    <string name="phone_sign_in_screen_mobile_label">Mobile</string>
+    <string name="phone_sign_in_screen_mobile_hint">XXX XXX XXX</string>
+    <string name="phone_sign_in_screen_code_title">Enter your code</string>
+    <string name="phone_sign_in_screen_code_message">We\'ve just sent a verification code to %1$s</string>
+    <string name="phone_sign_in_screen_code_disclaimer">By tapping "Continue", an SMS may be sent. Message  &amp; data rates may apply.</string>
+
+    <!-- Home screen -->
+    <string name="home_screen_sign_out">Sign out</string>
 </resources>
