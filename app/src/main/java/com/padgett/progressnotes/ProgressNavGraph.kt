@@ -14,14 +14,26 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.padgett.progressnotes.ui.BaseViewModel
 import com.padgett.progressnotes.ui.UiEvent
 import com.padgett.progressnotes.ui.authentication.PhoneNumberSignInScreen
 import com.padgett.progressnotes.ui.authentication.PhoneNumberSignInViewModel
-import com.padgett.progressnotes.ui.home.HomeScreen
-import com.padgett.progressnotes.ui.home.HomeViewModel
+import com.padgett.progressnotes.ui.home.AddNoteScreen
+import com.padgett.progressnotes.ui.home.AddNoteViewModel
+import com.padgett.progressnotes.ui.home.ClientsScreen
+import com.padgett.progressnotes.ui.home.ClientsViewModel
+import com.padgett.progressnotes.ui.home.EditClientScreen
+import com.padgett.progressnotes.ui.home.EditClientViewModel
+import com.padgett.progressnotes.ui.home.EditNoteScreen
+import com.padgett.progressnotes.ui.home.EditNoteViewModel
+import com.padgett.progressnotes.ui.home.InvoicesScreen
+import com.padgett.progressnotes.ui.home.InvoicesViewModel
+import com.padgett.progressnotes.ui.home.QuickNoteScreen
+import com.padgett.progressnotes.ui.home.QuickNoteViewModel
 
 data class NavCallbacks(
     val isLoadingOverlayVisible: (Boolean) -> Unit,
@@ -32,18 +44,16 @@ data class NavCallbacks(
 @Composable
 fun ProgressNavGraph(
     navController: NavHostController,
-    navCallbacks: NavCallbacks
+    navCallbacks: NavCallbacks,
+    navActions: ProgressNavigationActions
 ) {
     val context = LocalContext.current
-    val navActions: ProgressNavigationActions = remember(navController) {
-        ProgressNavigationActions(navController)
-    }
 
     NavHost(
         navController = navController,
-        startDestination = ProgressDestinations.SIGN_IN_DESTINATION,
+        startDestination = ProgressRoute.SIGN_IN,
     ) {
-        composable(ProgressDestinations.SIGN_IN_DESTINATION) {
+        composable(ProgressRoute.SIGN_IN) {
             val viewModel = getViewModel<PhoneNumberSignInViewModel>(context = context, navCallbacks = navCallbacks)
             var hasValidSignIn by remember { mutableStateOf(viewModel.hasValidSignIn()) }
             if (!hasValidSignIn) {
@@ -52,7 +62,7 @@ fun ProgressNavGraph(
                 }
             }
             if (hasValidSignIn) {
-                navActions.navigateToHome()
+                navActions.navigateToQuickNote()
             } else {
                 PhoneNumberSignInScreen(
                     viewModel = viewModel,
@@ -60,12 +70,76 @@ fun ProgressNavGraph(
                 )
             }
         }
-        composable(ProgressDestinations.HOME_DESTINATION) {
-            val viewModel = getViewModel<HomeViewModel>(context = context, navCallbacks = navCallbacks)
+        composable(ProgressRoute.QUICK_NOTE) {
+            val viewModel = getViewModel<QuickNoteViewModel>(context = context, navCallbacks = navCallbacks)
             BackHandler(true) {
                 // Do nothing
             }
-            HomeScreen(viewModel = viewModel, onSignedOut = navActions::navigateToSignIn)
+            QuickNoteScreen(
+                viewModel = viewModel,
+                onNoteSelected = navActions::navigateToEditNote,
+                onAddNoteClicked = navActions::navigateToAddNoteRoute,
+                onSignedOut = navActions::navigateToSignIn
+            )
+        }
+        composable(ProgressRoute.ADD_NOTE) {
+            val viewModel = getViewModel<AddNoteViewModel>(context = context, navCallbacks = navCallbacks)
+            AddNoteScreen(
+                viewModel = viewModel,
+                navigateToEditNote = navActions::navigateToEditNote
+            )
+        }
+        composable(ProgressRoute.CLIENTS) {
+            val viewModel = getViewModel<ClientsViewModel>(context = context, navCallbacks = navCallbacks)
+            BackHandler(true) {
+                // Do nothing
+            }
+            ClientsScreen(
+                viewModel = viewModel,
+                navigateToAddClient = navActions::navigateToAddClient,
+                navigateToEditClient = navActions::navigateToEditClient
+            )
+        }
+        composable(ProgressRoute.INVOICES) {
+            val viewModel = getViewModel<InvoicesViewModel>(context = context, navCallbacks = navCallbacks)
+            BackHandler(true) {
+                // Do nothing
+            }
+            InvoicesScreen(viewModel = viewModel)
+        }
+        composable(route = ProgressRoute.CLIENT_ADD) {
+            val viewModel = getViewModel<EditClientViewModel>(context = context, navCallbacks = navCallbacks)
+            BackHandler(true) {
+                // Do nothing
+            }
+            EditClientScreen(viewModel = viewModel) {
+                navController.popBackStack()
+            }
+        }
+        composable(
+            route = ProgressRoute.CLIENT_EDIT,
+            arguments = listOf(
+                navArgument(ProgressNavArgs.CLIENT_ID_ARG) { type = NavType.StringType }
+            )
+        ) {
+            val viewModel = getViewModel<EditClientViewModel>(context = context, navCallbacks = navCallbacks)
+            BackHandler(true) {
+                // Do nothing
+            }
+            EditClientScreen(viewModel = viewModel) {
+                navController.popBackStack()
+            }
+        }
+        composable(
+            route = ProgressRoute.NOTE_EDIT,
+            arguments = listOf(
+                navArgument(ProgressNavArgs.NOTE_ID_ARG) { type = NavType.StringType }
+            )
+        ) {
+            val viewModel = getViewModel<EditNoteViewModel>(context = context, navCallbacks = navCallbacks)
+            EditNoteScreen(viewModel = viewModel) {
+                navController.popBackStack()
+            }
         }
     }
 }

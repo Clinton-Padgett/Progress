@@ -3,6 +3,7 @@
 
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
+    <string name="ok">OK</string>
     <string name="yes">Yes</string>
     <string name="select">Select</string>
     <string name="okay">Okay</string>
@@ -26,4 +27,13 @@
 
     <!-- Home screen -->
     <string name="home_screen_sign_out">Sign out</string>
+
+    <!-- Edit Client screen -->
+    <string name="edit_client_screen_error">All fields required</string>
+
+    <!-- Edit Note screen -->
+    <string name="edit_note_screen_type">Type</string>
+    <string name="edit_note_screen_date">Date</string>
+    <string name="edit_note_screen_start">Start</string>
+    <string name="edit_note_screen_end">Finish</string>
 </resources>

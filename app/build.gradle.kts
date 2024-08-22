@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.compose.android)
+    implementation(libs.gson)
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -76,6 +77,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.firebase.common.ktx)
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore.ktx)
     kapt(libs.hilt.android.compiler)
     kapt(libs.hilt.compiler)
     annotationProcessor(libs.hilt.compiler)
