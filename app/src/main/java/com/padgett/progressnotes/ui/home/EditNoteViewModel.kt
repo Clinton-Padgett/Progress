@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.padgett.progressnotes.ProgressNavArgs
 import com.padgett.progressnotes.domain.ClientRepository
-import com.padgett.progressnotes.domain.clients.models.ClientDetails
 import com.padgett.progressnotes.domain.clients.models.ClientNoteItem
 import com.padgett.progressnotes.domain.clients.models.TimeType
 import com.padgett.progressnotes.ui.BaseViewModel
@@ -25,23 +24,22 @@ import java.util.Date
 import javax.inject.Inject
 
 data class EditNoteUiState(
-    val id: String? = null,
     val clientName: String = "",
     val notes: String = "",
     val isDraft: Boolean = true,
+    val isApproved: Boolean = false,
     val isValidEntry: Boolean = false,
     val items: List<Item> = listOf()
 ) {
     data class Item(
-        val id: String,
         val type: TimeType = TimeType.OFFICE,
         val date: LocalDate = LocalDate.now(),
-        val startTime: LocalTime,
+        val startTime: LocalTime = LocalTime.now(),
         val minutes: Long = 0,
         val invoice: Boolean = true,
         val billable: Boolean = true,
         val description: String = "",
-        val deleted: Date? = null
+        val deleted: Boolean = false
     )
 }
 
@@ -52,17 +50,19 @@ class EditNoteViewModel @Inject constructor(
 ) : BaseViewModel() {
     private val noteData = MutableStateFlow(EditNoteUiState())
 
-    private val noteId: String = savedStateHandle[ProgressNavArgs.NOTE_ID_ARG]!!
-    private lateinit var clientDetails: ClientDetails
+    private val clientId: String = savedStateHandle[ProgressNavArgs.CLIENT_ID_ARG]!!
+    private var noteId: String? = savedStateHandle[ProgressNavArgs.NOTE_ID_ARG]
     private var hasUserChanges = false
 
     val uiState: StateFlow<EditNoteUiState> =
         noteData
             .map {
-                val isValid = it.items.all { it.deleted != null || (it.description.isNotBlank() && it.minutes > 0) } && it.notes.isNotBlank()
+                val isValid = it.items.all { it.deleted || (it.description.isNotBlank() && it.minutes > 0) } && it.notes.isNotBlank()
                 it.copy(
                     isValidEntry = isValid,
-                    items = it.items.filter { item -> item.deleted == null }
+                    items = it.items
+                        .filterNot { item -> item.deleted }
+                        .sortedBy { LocalDateTime.of(it.date, it.startTime) }
                 )
             }
             .stateIn(
@@ -72,34 +72,17 @@ class EditNoteViewModel @Inject constructor(
             )
 
     init {
+        showLoadingOverlay()
         viewModelScope.launch {
-            clientRepository.getNote(noteId)
-                .onSuccess { note ->
-                    clientDetails = clientRepository.getClient(note.clientId).getOrThrow()
-                    clientRepository.getNoteItems(noteId).collect { noteItems ->
-                        val isValid = noteItems.all { it.deleted != null || (it.description.isNotBlank() && it.minutes > 0) } && note.notes.isNotBlank()
-                        if (noteData.value.id == null) {
-                            noteData.value = EditNoteUiState(
-                                id = note.id,
-                                clientName = clientDetails.name,
-                                notes = note.notes,
-                                isDraft = note.isDraft,
-                                isValidEntry = isValid,
-                                items = noteItems.map { note -> note.mapToUiItem() }
-                            )
-                        } else {
-                            val existingNoteItemIds = noteData.value.items.map { it.id }
-                            noteData.value = noteData.value.copy(
-                                isValidEntry = isValid,
-                                items = noteData.value.items.plus(noteItems.filter { it.id !in existingNoteItemIds }.map { it.mapToUiItem() })
-                            )
-                        }
-                    }
-
-                }
-                .onFailure {
+            clientRepository.getClient(clientId)
+                .onSuccess {
+                    noteData.value = EditNoteUiState(clientName = it.name)
+                    getNote()
+                }.onFailure {
+                    hideLoadingOverlay()
                     showErrorMessageToast(it)
                 }
+
         }
     }
 
@@ -110,9 +93,10 @@ class EditNoteViewModel @Inject constructor(
     }
 
     fun onAddItemClicked() {
-        viewModelScope.launch {
-            clientRepository.addNoteItem(noteId)
-        }
+        noteData.value = noteData.value.copy(
+            items = noteData.value.items.plus(EditNoteUiState.Item())
+        )
+        hasUserChanges = true
     }
 
     fun onNotesChanged(text: String) {
@@ -120,31 +104,31 @@ class EditNoteViewModel @Inject constructor(
         hasUserChanges = true
     }
 
-    fun onTypeChanged(id: String, type: TimeType) {
+    fun onTypeChanged(index: Int, type: TimeType) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .map { note ->
-                    if (note.id == id) note.copy(type = type) else note
+                .mapIndexed { i, note ->
+                    if (index == i) note.copy(type = type) else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onStartDateChanged(id: String, date: LocalDate) {
+    fun onStartDateChanged(index: Int, date: LocalDate) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .map { note ->
-                    if (note.id == id) note.copy(date = date) else note
+                .mapIndexed { i, note ->
+                    if (index == i) note.copy(date = date) else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onStartTimeChanged(id: String, time: LocalTime) {
+    fun onStartTimeChanged(index: Int, time: LocalTime) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .map { note ->
-                    if (note.id == id) {
+                .mapIndexed { i, note ->
+                    if (index == i) {
                         val newMinutes = if (note.minutes > 0L) note.minutes + time.until(note.startTime, ChronoUnit.MINUTES) else 0L
                         if (newMinutes > 0L) {
                             note.copy(minutes = newMinutes, startTime = time)
@@ -157,51 +141,51 @@ class EditNoteViewModel @Inject constructor(
         hasUserChanges = true
     }
 
-    fun onMinutesChanged(id: String, minutes: Long) {
+    fun onMinutesChanged(index: Int, minutes: Long) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .map { note ->
-                    if (note.id == id) note.copy(minutes = minutes) else note
+                .mapIndexed { i, note ->
+                    if (index == i) note.copy(minutes = minutes) else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onDescriptionChanged(id: String, text: String) {
+    fun onDescriptionChanged(index: Int, text: String) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .map { note ->
-                    if (note.id == id) note.copy(description = text) else note
+                .mapIndexed { i, note ->
+                    if (index == i) note.copy(description = text) else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onInvoiceClicked(id: String) {
+    fun onInvoiceClicked(index: Int) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .map { note ->
-                    if (note.id == id) note.copy(invoice = !note.invoice) else note
+                .mapIndexed { i, note ->
+                    if (index == i) note.copy(invoice = !note.invoice) else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onBillableClicked(id: String) {
+    fun onBillableClicked(index: Int) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .map { note ->
-                    if (note.id == id) note.copy(billable = !note.billable) else note
+                .mapIndexed { i, note ->
+                    if (index == i) note.copy(billable = !note.billable) else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onDeleteItemClicked(id: String) {
+    fun onDeleteItemClicked(index: Int) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .map { note ->
-                    if (note.id == id) note.copy(deleted = Date()) else note
+                .mapIndexed { i, note ->
+                    if (index == i) note.copy(deleted = true) else note
                 }
         )
         hasUserChanges = true
@@ -221,11 +205,11 @@ class EditNoteViewModel @Inject constructor(
     }
 
     fun onApproveClicked(navigate: () -> Unit) {
-        if (hasUserChanges) {
+        if (hasUserChanges || !noteData.value.isApproved) {
             showLoadingOverlay()
             viewModelScope.launch {
+                noteData.value = noteData.value.copy(isApproved = true, isDraft = false)
                 saveChanges()
-                clientRepository.approveNote(noteId)
                 navigate.invoke()
                 hideLoadingOverlay()
             }
@@ -234,19 +218,62 @@ class EditNoteViewModel @Inject constructor(
         }
     }
 
+    private suspend fun getNote() {
+        if (noteId != null && noteId!!.isNotBlank()) {
+            clientRepository.getNote(noteId!!)
+                .onSuccess { note ->
+                    clientRepository.getNoteItems(noteId!!, note.versionId)
+                        .onSuccess { noteItems ->
+                            val isValid = noteItems
+                                .all { it.deleted || (it.description.isNotBlank() && it.minutes > 0) }
+                                    && note.notes.isNotBlank()
+                            noteData.value = noteData.value.copy(
+                                notes = note.notes,
+                                isDraft = note.isDraft,
+                                isValidEntry = isValid,
+                                items = noteItems.map { it.mapToUiItem() }
+                            )
+                            hideLoadingOverlay()
+                        }.onFailure {
+                            showErrorMessageToast(it)
+                            hideLoadingOverlay()
+                        }
+                }
+                .onFailure {
+                    showErrorMessageToast(it)
+                    hideLoadingOverlay()
+                }
+        } else {
+            hideLoadingOverlay()
+        }
+    }
+
     private suspend fun saveChanges() {
         if (hasUserChanges) {
-            noteData.value.items.forEach {
-                clientRepository.updateNoteItem(noteId, it.mapToDomain())
+            hasUserChanges = false
+            with(noteData.value) {
+                if (noteId == null) {
+                    noteId = clientRepository.getNewNoteId(clientId)
+                }
+                val versionId = clientRepository.addNoteVersion(
+                    clientId = clientId,
+                    noteId = noteId!!,
+                    notes = notes,
+                    isDraft = isDraft,
+                    isApproved = isApproved
+                )
+                clientRepository.addNoteItems(
+                    noteId = noteId!!,
+                    clientId = clientId,
+                    versionId = versionId,
+                    items = items.map { it.mapToDomain() }
+                )
             }
-            clientRepository.updateNote(noteId, noteData.value.notes)
         }
     }
 
     private fun EditNoteUiState.Item.mapToDomain(): ClientNoteItem =
         ClientNoteItem(
-            id = id,
-            clientId = clientDetails.id,
             type = type,
             start = Date.from(LocalDateTime.of(date, startTime).atZone(ZoneId.systemDefault()).toInstant()),
             minutes = minutes,
@@ -259,7 +286,6 @@ class EditNoteViewModel @Inject constructor(
     private fun ClientNoteItem.mapToUiItem(): EditNoteUiState.Item {
         val startDateTime = Instant.ofEpochMilli(start.time).atZone(ZoneId.systemDefault()).toLocalDateTime()
         return EditNoteUiState.Item(
-            id = id,
             type = type,
             date = startDateTime.toLocalDate(),
             startTime = startDateTime.toLocalTime(),

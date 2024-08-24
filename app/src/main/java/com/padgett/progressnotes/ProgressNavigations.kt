@@ -18,6 +18,7 @@ object ProgressRouteName {
     const val CLIENT_ADD = "client_add"
     const val CLIENT_EDIT = "client_edit"
     const val NOTE_EDIT = "note_edit"
+    const val NOTE_ADD = "note_add"
 }
 
 object ProgressRoute {
@@ -28,7 +29,8 @@ object ProgressRoute {
     const val INVOICES = ProgressRouteName.INVOICES
     const val CLIENT_ADD = ProgressRouteName.CLIENT_ADD
     const val CLIENT_EDIT = "${ProgressRouteName.CLIENT_EDIT}/{$CLIENT_ID_ARG}"
-    const val NOTE_EDIT = "${ProgressRouteName.NOTE_EDIT}/{$NOTE_ID_ARG}"
+    const val NOTE_ADD = "${ProgressRouteName.NOTE_ADD}/{$CLIENT_ID_ARG}"
+    const val NOTE_EDIT = "${ProgressRouteName.NOTE_EDIT}/{$CLIENT_ID_ARG}/{$NOTE_ID_ARG}"
 }
 
 class ProgressNavigationActions(private val navController: NavHostController) {
@@ -60,8 +62,12 @@ class ProgressNavigationActions(private val navController: NavHostController) {
         navController.navigate("${ProgressRouteName.CLIENT_EDIT}/$clientId")
     }
 
-    fun navigateToEditNote(noteId: String) {
-        navController.navigate("${ProgressRouteName.NOTE_EDIT}/$noteId")
+    fun navigateToAddNote(clientId: String) {
+        navController.navigate("${ProgressRouteName.NOTE_ADD}/$clientId")
+    }
+
+    fun navigateToEditNote(clientId: String, noteId: String) {
+        navController.navigate("${ProgressRouteName.NOTE_EDIT}/$clientId/$noteId")
     }
 
     fun navigateToAddNoteRoute() {

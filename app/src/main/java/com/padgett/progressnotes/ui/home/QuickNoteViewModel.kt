@@ -18,7 +18,8 @@ data class QuickNoteUiState(
     val notes: List<NoteDetails> = listOf()
 ) {
     data class NoteDetails(
-        val id: String,
+        val clientId: String,
+        val noteId: String,
         val created: Date,
         val clientName: String,
         val notes: String
@@ -48,7 +49,8 @@ class QuickNoteViewModel @Inject constructor(
                     notes.mapNotNull { note ->
                         clients.firstOrNull { it.id == note.clientId }?.let { client ->
                             QuickNoteUiState.NoteDetails(
-                                id = note.id,
+                                clientId = note.clientId,
+                                noteId = note.noteId,
                                 created = note.created,
                                 clientName = client.name,
                                 notes = note.notes

@@ -41,11 +41,10 @@ class AddNoteViewModel @Inject constructor(private val clientRepository: ClientR
         }
     }
 
-    fun onClientSelected(clientId: String, navigateToEditNote: (noteId: String) -> Unit) {
+    fun onClientSelected(clientId: String, navigateToEditNote: (clientId: String) -> Unit) {
         showLoadingOverlay()
         viewModelScope.launch {
-            val noteId = clientRepository.addNote(clientId)
-            navigateToEditNote.invoke(noteId)
+            navigateToEditNote.invoke(clientId)
             hideLoadingOverlay()
         }
     }

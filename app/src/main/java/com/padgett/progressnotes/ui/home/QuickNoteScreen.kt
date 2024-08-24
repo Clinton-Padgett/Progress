@@ -39,7 +39,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 @Composable
-fun QuickNoteScreen(viewModel: QuickNoteViewModel, onNoteSelected: (id: String) -> Unit, onAddNoteClicked: () -> Unit, onSignedOut: () -> Unit) {
+fun QuickNoteScreen(
+    viewModel: QuickNoteViewModel,
+    onNoteSelected: (clientId: String, noteId: String) -> Unit,
+    onAddNoteClicked: () -> Unit,
+    onSignedOut: () -> Unit
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     MainContent(
@@ -53,7 +58,12 @@ fun QuickNoteScreen(viewModel: QuickNoteViewModel, onNoteSelected: (id: String) 
 }
 
 @Composable
-private fun MainContent(uiState: QuickNoteUiState, onNoteSelected: (id: String) -> Unit, onAddNoteClicked: () -> Unit, onSignOutClicked: () -> Unit) {
+private fun MainContent(
+    uiState: QuickNoteUiState,
+    onNoteSelected: (clientId: String, noteId: String) -> Unit,
+    onAddNoteClicked: () -> Unit,
+    onSignOutClicked: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -100,14 +110,14 @@ private fun MainContent(uiState: QuickNoteUiState, onNoteSelected: (id: String) 
 }
 
 @Composable
-private fun NoteCard(data: QuickNoteUiState.NoteDetails, onClicked: (id: String) -> Unit) {
+private fun NoteCard(data: QuickNoteUiState.NoteDetails, onClicked: (clientId: String, noteId: String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .border(1.dp, LightGrey, RoundedCornerShape(8.dp))
             .background(Charcoal)
-            .clickable { onClicked.invoke(data.id) },
+            .clickable { onClicked.invoke(data.clientId, data.noteId) },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
@@ -147,26 +157,29 @@ private fun PreviewQuickNoteScreen() {
             uiState = QuickNoteUiState(
                 listOf(
                     QuickNoteUiState.NoteDetails(
-                        id = "",
+                        clientId = "",
+                        noteId = "",
                         created = Date(),
                         clientName = "Joe Blow",
                         notes = "Some long notes here which we need to truncate if they get too long to display in a nice way. This should not be any longer than 2 lines."
                     ),
                     QuickNoteUiState.NoteDetails(
-                        id = "",
+                        clientId = "",
+                        noteId = "",
                         created = Date(),
                         clientName = "Clinton Padgett",
                         notes = "Who is he?"
                     ),
                     QuickNoteUiState.NoteDetails(
-                        id = "",
+                        clientId = "",
+                        noteId = "",
                         created = Date(),
                         clientName = "Alex Padgett",
                         notes = "Yes please"
                     )
                 )
             ),
-            onNoteSelected = {},
+            onNoteSelected = { _, _ -> },
             onAddNoteClicked = {},
             onSignOutClicked = {}
         )

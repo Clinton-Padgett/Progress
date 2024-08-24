@@ -38,39 +38,36 @@ class ClientRepositoryImpl @Inject constructor(
     override fun getDraftNotes(): Flow<List<ClientNote>> =
         firestoreClient.getDraftNotes().map { notes -> notes.map { it.mapToDomain() } }
 
+    override suspend fun getNewNoteId(clientId: String): String = firestoreClient.addNote(clientId)
+
     override suspend fun getNote(id: String): Result<ClientNote> =
         firestoreClient.getNote(id).map { Pair(id, it).mapToDomain() }
 
-    override suspend fun updateNote(noteId: String, notes: String) {
+    override suspend fun addNoteVersion(clientId: String, noteId: String, notes: String, isDraft: Boolean, isApproved: Boolean) =
         withContext(ioDispatcher) {
-            firestoreClient.updateNote(noteId, notes)
+            firestoreClient.addNoteVersion(clientId = clientId, noteId = noteId, notes = notes, isDraft = isDraft, isApproved = isApproved)
         }
-    }
-
-    override suspend fun approveNote(noteId: String) {
-        withContext(ioDispatcher) {
-            firestoreClient.approveNote(noteId)
-        }
-    }
-
-    override suspend fun addNote(clientId: String): String = firestoreClient.addNote(clientId)
     // endregion
 
     // region Note Items
-    override fun getNoteItems(noteId: String): Flow<List<ClientNoteItem>> =
-        firestoreClient.getNoteItems(noteId).map { items -> items.map { it.mapToDomain() } }
+    override suspend fun getNoteItems(noteId: String, versionId: String): Result<List<ClientNoteItem>> =
+        firestoreClient.getNoteItems(noteId, versionId).map { items -> items.map { it.mapToDomain() } }
 
-    override suspend fun addNoteItem(noteId: String) {
+    override suspend fun addNoteItems(clientId: String, noteId: String, versionId: String, items: List<ClientNoteItem>) {
         withContext(ioDispatcher) {
-            firestoreClient.getNote(noteId).onSuccess {
-                firestoreClient.addNoteItem(it.clientId, noteId)
+            items.forEach {
+                firestoreClient.addNoteItem(
+                    clientId = clientId,
+                    noteId = noteId,
+                    versionId = versionId,
+                    description = it.description,
+                    type = it.type,
+                    start = it.start,
+                    minutes = it.minutes,
+                    billable = it.billable,
+                    invoice = it.invoice
+                )
             }
-        }
-    }
-
-    override suspend fun updateNoteItem(noteId: String, clientNoteItem: ClientNoteItem) {
-        withContext(ioDispatcher) {
-            firestoreClient.updateNoteItem(noteId, clientNoteItem)
         }
     }
     // endregion

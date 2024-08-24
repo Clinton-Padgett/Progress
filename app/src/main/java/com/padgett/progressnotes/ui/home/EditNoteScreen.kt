@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -103,14 +103,14 @@ private fun MainContent(
     onNotesChanged: (String) -> Unit,
     onAddItemClicked: () -> Unit,
     onApproveClicked: () -> Unit,
-    onTypeChanged: (id: String, TimeType) -> Unit,
-    onStartDateChanged: (id: String, LocalDate) -> Unit,
-    onStartTimeChanged: (id: String, LocalTime) -> Unit,
-    onMinutesChanged: (id: String, Long) -> Unit,
-    onDescriptionChanged: (id: String, String) -> Unit,
-    onInvoiceClicked: (id: String) -> Unit,
-    onBillableClicked: (id: String) -> Unit,
-    onDeleteItemClicked: (id: String) -> Unit,
+    onTypeChanged: (index: Int, TimeType) -> Unit,
+    onStartDateChanged: (index: Int, LocalDate) -> Unit,
+    onStartTimeChanged: (index: Int, LocalTime) -> Unit,
+    onMinutesChanged: (index: Int, Long) -> Unit,
+    onDescriptionChanged: (index: Int, String) -> Unit,
+    onInvoiceClicked: (index: Int) -> Unit,
+    onBillableClicked: (index: Int) -> Unit,
+    onDeleteItemClicked: (index: Int) -> Unit,
     onCloseClicked: () -> Unit,
 ) {
     Column(
@@ -134,17 +134,17 @@ private fun MainContent(
             }
         }
         LazyColumn {
-            items(uiState.items) { data ->
+            itemsIndexed(uiState.items) { index, data ->
                 NoteItem(
                     data = data,
-                    onTypeChanged = { onTypeChanged.invoke(data.id, it) },
-                    onStartDateChanged = { onStartDateChanged.invoke(data.id, it) },
-                    onStartTimeChanged = { onStartTimeChanged.invoke(data.id, it) },
-                    onMinutesChanged = { onMinutesChanged.invoke(data.id, it) },
-                    onDescriptionChanged = { onDescriptionChanged.invoke(data.id, it) },
-                    onInvoiceClicked = { onInvoiceClicked.invoke(data.id) },
-                    onBillableClicked = { onBillableClicked.invoke(data.id) },
-                    onDeleteClicked = { onDeleteItemClicked.invoke(data.id) }
+                    onTypeChanged = { onTypeChanged.invoke(index, it) },
+                    onStartDateChanged = { onStartDateChanged.invoke(index, it) },
+                    onStartTimeChanged = { onStartTimeChanged.invoke(index, it) },
+                    onMinutesChanged = { onMinutesChanged.invoke(index, it) },
+                    onDescriptionChanged = { onDescriptionChanged.invoke(index, it) },
+                    onInvoiceClicked = { onInvoiceClicked.invoke(index) },
+                    onBillableClicked = { onBillableClicked.invoke(index) },
+                    onDeleteClicked = { onDeleteItemClicked.invoke(index) }
                 )
             }
             item {
@@ -485,7 +485,6 @@ private fun EditClientPreview() {
                     clientName = " Clinton Padgett",
                     items = listOf(
                         EditNoteUiState.Item(
-                            id = "",
                             type = TimeType.HOME_VISIT,
                             date = LocalDate.now().minusDays(1L),
                             minutes = 0L,
@@ -493,7 +492,6 @@ private fun EditClientPreview() {
                             description = "Did some home visit"
                         ),
                         EditNoteUiState.Item(
-                            id = "",
                             type = TimeType.TRAVEL,
                             date = LocalDate.now(),
                             startTime = LocalTime.now(),

@@ -13,12 +13,10 @@ interface ClientRepository {
     suspend fun getClient(id: String): Result<ClientDetails>
 
     fun getDraftNotes(): Flow<List<ClientNote>>
+    suspend fun getNewNoteId(clientId: String): String
+    suspend fun addNoteVersion(clientId: String, noteId: String, notes: String, isDraft: Boolean, isApproved: Boolean): String
     suspend fun getNote(id: String): Result<ClientNote>
-    suspend fun updateNote(noteId: String, notes: String)
-    suspend fun approveNote(noteId: String)
-    suspend fun addNote(clientId: String): String
 
-    fun getNoteItems(noteId: String): Flow<List<ClientNoteItem>>
-    suspend fun addNoteItem(noteId: String)
-    suspend fun updateNoteItem(noteId: String, clientNoteItem: ClientNoteItem)
+    suspend fun addNoteItems(clientId: String, noteId: String, versionId: String, items: List<ClientNoteItem>)
+    suspend fun getNoteItems(noteId: String, versionId: String): Result<List<ClientNoteItem>>
 }

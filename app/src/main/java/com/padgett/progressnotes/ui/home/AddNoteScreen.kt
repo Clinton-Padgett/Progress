@@ -34,7 +34,7 @@ import com.padgett.progressnotes.ui.theme.Typography
 import kotlinx.coroutines.launch
 
 @Composable
-fun AddNoteScreen(viewModel: AddNoteViewModel, navigateToEditNote: (noteId: String) -> Unit) {
+fun AddNoteScreen(viewModel: AddNoteViewModel, navigateToEditNote: (clientId: String) -> Unit) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     MainContent(

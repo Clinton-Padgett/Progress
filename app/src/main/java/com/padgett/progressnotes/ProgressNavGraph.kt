@@ -86,7 +86,7 @@ fun ProgressNavGraph(
             val viewModel = getViewModel<AddNoteViewModel>(context = context, navCallbacks = navCallbacks)
             AddNoteScreen(
                 viewModel = viewModel,
-                navigateToEditNote = navActions::navigateToEditNote
+                navigateToEditNote = navActions::navigateToAddNote
             )
         }
         composable(ProgressRoute.CLIENTS) {
@@ -131,9 +131,21 @@ fun ProgressNavGraph(
             }
         }
         composable(
+            route = ProgressRoute.NOTE_ADD,
+            arguments = listOf(
+                navArgument(ProgressNavArgs.CLIENT_ID_ARG) { type = NavType.StringType }
+            )
+        ) {
+            val viewModel = getViewModel<EditNoteViewModel>(context = context, navCallbacks = navCallbacks)
+            EditNoteScreen(viewModel = viewModel) {
+                navController.popBackStack()
+            }
+        }
+        composable(
             route = ProgressRoute.NOTE_EDIT,
             arguments = listOf(
-                navArgument(ProgressNavArgs.NOTE_ID_ARG) { type = NavType.StringType }
+                navArgument(ProgressNavArgs.NOTE_ID_ARG) { type = NavType.StringType },
+                navArgument(ProgressNavArgs.CLIENT_ID_ARG) { type = NavType.StringType }
             )
         ) {
             val viewModel = getViewModel<EditNoteViewModel>(context = context, navCallbacks = navCallbacks)

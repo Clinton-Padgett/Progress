@@ -8,8 +8,8 @@ import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 import com.padgett.progressnotes.data.clients.models.ClientResponse
 import com.padgett.progressnotes.data.clients.models.NoteItemResponse
-import com.padgett.progressnotes.data.clients.models.NotesResponse
-import com.padgett.progressnotes.domain.clients.models.ClientNoteItem
+import com.padgett.progressnotes.data.clients.models.NoteVersionResponse
+import com.padgett.progressnotes.data.mapToDomainException
 import com.padgett.progressnotes.domain.clients.models.TimeType
 import com.padgett.progressnotes.domain.common.exceptions.GenericException
 import kotlinx.coroutines.flow.Flow
@@ -23,21 +23,23 @@ import kotlin.coroutines.suspendCoroutine
 class FirestoreClient @Inject constructor(private val firebaseFirestore: FirebaseFirestore) {
 
     private companion object {
-        const val USER_ID = "vpKv88ava7Fw8I0WVjQR"
-        const val COMPANY_ID = "sIwd84Tq9qIwYBEH3dsI"
+        const val COLLECTION_COMPANIES = "companies"
+        const val COLLECTION_CLIENTS = "clients"
+        const val COLLECTION_NOTES = "notes"
+        const val COLLECTION_VERSIONS = "versions"
+        const val COLLECTION_ITEMS = "items"
 
-        const val COMPANIES_KEY = "companies"
-        const val CLIENTS_KEY = "clients"
-        const val NOTES_KEY = "notes"
-        const val ITEMS_KEY = "items"
-        const val NAME_KEY = "name"
-        const val REFERENCE_KEY = "reference"
-        const val ACTIVE_KEY = "active"
-        const val ROLES_KEY = "roles"
+        const val FIELD_NAME = "name"
+        const val FIELD_REFERENCE = "reference"
+        const val FIELD_IS_ACTIVE = "is_active"
+        const val FIELD_COMPANY_ID = "company_id"
         const val FIELD_CLIENT_ID = "client_id"
+        const val FIELD_NOTE_ID = "note_id"
+        const val FIELD_VERSION_ID = "version_id"
+        const val FIELD_ROLES = "roles"
         const val FIELD_IS_DRAFT = "is_draft"
-        const val FIELD_SUPERSEDED_BY = "superseded_by"
-        const val FIELD_CREATED_BY = "created_by"
+        const val FIELD_IS_APPROVED = "is_approved"
+        const val FIELD_CREATOR = "creator"
         const val FIELD_CREATED = "created"
         const val FIELD_DESCRIPTION = "description"
         const val FIELD_TYPE = "type"
@@ -48,30 +50,34 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
         const val FIELD_DELETED = "deleted"
         const val FIELD_NOTES = "notes"
 
-        const val CREATOR_VALUE = "creator"
+        const val VALUE_USER_ID = "vpKv88ava7Fw8I0WVjQR"
+        const val VALUE_COMPANY_ID = "sIwd84Tq9qIwYBEH3dsI"
+        const val VALUE_CREATOR = "creator"
     }
 
     private val clientsRef by lazy {
-        firebaseFirestore.collection(COMPANIES_KEY)
-            .document(COMPANY_ID)
-            .collection(CLIENTS_KEY)
+        firebaseFirestore.collection(COLLECTION_COMPANIES)
+            .document(VALUE_COMPANY_ID)
+            .collection(COLLECTION_CLIENTS)
     }
 
     private val notesRef by lazy {
-        firebaseFirestore.collection(COMPANIES_KEY)
-            .document(COMPANY_ID)
-            .collection(NOTES_KEY)
+        firebaseFirestore.collection(COLLECTION_COMPANIES)
+            .document(VALUE_COMPANY_ID)
+            .collection(COLLECTION_NOTES)
     }
+
+    private fun getUserId(): String = Firebase.auth.currentUser!!.uid
 
     fun addClient(name: String, reference: String, isActive: Boolean) {
         clientsRef
             .add(
                 hashMapOf(
-                    NAME_KEY to name,
-                    REFERENCE_KEY to reference,
-                    ACTIVE_KEY to isActive,
-                    ROLES_KEY to hashMapOf(
-                        Firebase.auth.currentUser!!.uid to CREATOR_VALUE
+                    FIELD_NAME to name,
+                    FIELD_REFERENCE to reference,
+                    FIELD_IS_ACTIVE to isActive,
+                    FIELD_ROLES to hashMapOf(
+                        getUserId() to VALUE_CREATOR
                     )
                 )
             )
@@ -82,11 +88,11 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
             .document(id)
             .set(
                 hashMapOf(
-                    NAME_KEY to name,
-                    REFERENCE_KEY to reference,
-                    ACTIVE_KEY to isActive,
-                    ROLES_KEY to hashMapOf(
-                        Firebase.auth.currentUser!!.uid to CREATOR_VALUE
+                    FIELD_NAME to name,
+                    FIELD_REFERENCE to reference,
+                    FIELD_IS_ACTIVE to isActive,
+                    FIELD_ROLES to hashMapOf(
+                        Firebase.auth.currentUser!!.uid to VALUE_CREATOR
                     )
                 )
             )
@@ -112,112 +118,126 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
                         continuation.resumeWithException(GenericException())
                     }
                 }.addOnFailureListener {
-                    continuation.resumeWithException(GenericException())
+                    continuation.resumeWithException(it.mapToDomainException())
                 }
         }
 
-    fun getDraftNotes(): Flow<List<Pair<String, NotesResponse>>> =
-        notesRef
-            .where(Filter.and(Filter.equalTo(FIELD_IS_DRAFT, true), Filter.equalTo(FIELD_SUPERSEDED_BY, "")))
+    fun getDraftNotes(): Flow<List<Pair<String, NoteVersionResponse>>> =
+        firebaseFirestore.collectionGroup(COLLECTION_VERSIONS)
+            .where(
+                Filter.and(
+                    Filter.equalTo(FIELD_COMPANY_ID, VALUE_COMPANY_ID),
+                    Filter.equalTo(FIELD_CREATOR, getUserId()),
+                    Filter.equalTo(FIELD_IS_DRAFT, true),
+                    Filter.equalTo(FIELD_IS_APPROVED, false)
+                )
+            )
             .snapshots()
             .map { snapshot ->
-                snapshot.documents.map { it.id to it.toObject<NotesResponse>()!! }
+                snapshot.documents.map {
+                    val noteId = it.reference.path.split("/")[3]
+                    noteId to it.toObject<NoteVersionResponse>()!!
+                }.groupBy { it.first }
+                    .map { it.value.maxByOrNull { it.second.created }!! }
             }
 
-    suspend fun getNote(id: String): Result<NotesResponse> =
+    suspend fun getNote(noteId: String): Result<NoteVersionResponse> =
         suspendCoroutine { continuation ->
-            notesRef
-                .document(id)
+            firebaseFirestore.collectionGroup(COLLECTION_VERSIONS)
+                .where(Filter.equalTo(FIELD_NOTE_ID, noteId))
                 .get()
-                .addOnSuccessListener {
-                    val response = it.toObject<NotesResponse>()
-                    if (response != null) {
-                        continuation.resume(Result.success(response))
-                    } else {
-                        continuation.resumeWithException(GenericException())
-                    }
+                .addOnSuccessListener { snapshot ->
+                    val response = snapshot
+                        .map { it.toObject<NoteVersionResponse>() }
+                        .maxByOrNull { it.created }!!
+                    continuation.resume(Result.success(response))
                 }.addOnFailureListener {
-                    continuation.resumeWithException(GenericException())
+                    continuation.resumeWithException(it.mapToDomainException())
                 }
         }
-
-    fun updateNote(noteId: String, notes: String) {
-        notesRef
-            .document(noteId)
-            .update(
-                mapOf(
-                    FIELD_NOTES to notes
-                )
-            )
-    }
-
-    fun approveNote(noteId: String) {
-        notesRef
-            .document(noteId)
-            .update(
-                mapOf(
-                    FIELD_IS_DRAFT to false
-                )
-            )
-    }
 
     fun addNote(clientId: String): String {
         val ref = notesRef.document()
         ref.set(
             hashMapOf(
+                FIELD_COMPANY_ID to VALUE_COMPANY_ID,
                 FIELD_CLIENT_ID to clientId,
-                FIELD_IS_DRAFT to true,
-                FIELD_NOTES to "",
-                FIELD_SUPERSEDED_BY to ""
+                FIELD_NOTE_ID to ref.id,
+                FIELD_CREATED to Date(),
+                FIELD_CREATOR to getUserId()
             )
         )
         return ref.id
     }
 
-    fun addNoteItem(clientId: String, noteId: String) {
+    fun addNoteVersion(
+        clientId: String,
+        noteId: String,
+        notes: String,
+        isDraft: Boolean,
+        isApproved: Boolean
+    ): String {
+        val ref = notesRef
+            .document(noteId)
+            .collection(COLLECTION_VERSIONS)
+            .document()
+        ref.set(
+            hashMapOf(
+                FIELD_COMPANY_ID to VALUE_COMPANY_ID,
+                FIELD_CLIENT_ID to clientId,
+                FIELD_NOTE_ID to noteId,
+                FIELD_VERSION_ID to ref.id,
+                FIELD_CREATED to Date(),
+                FIELD_CREATOR to getUserId(),
+                FIELD_NOTES to notes,
+                FIELD_IS_DRAFT to isDraft,
+                FIELD_IS_APPROVED to isApproved
+            )
+        )
+        return ref.id
+    }
+
+    fun addNoteItem(
+        clientId: String,
+        noteId: String,
+        versionId: String,
+        description: String,
+        type: TimeType,
+        start: Date,
+        minutes: Long,
+        billable: Boolean,
+        invoice: Boolean
+    ) {
         notesRef
             .document(noteId)
-            .collection(ITEMS_KEY)
+            .collection(COLLECTION_VERSIONS)
+            .document(versionId)
+            .collection(COLLECTION_ITEMS)
             .add(
                 hashMapOf(
                     FIELD_CLIENT_ID to clientId,
-                    FIELD_CREATED_BY to Firebase.auth.currentUser!!.uid,
-                    FIELD_CREATED to Date(),
-                    FIELD_DESCRIPTION to "",
-                    FIELD_TYPE to TimeType.OFFICE,
-                    FIELD_IS_DRAFT to true,
-                    FIELD_START to Date(),
-                    FIELD_MINUTES to 0,
-                    FIELD_BILLABLE to true,
-                    FIELD_INVOICE to true
+                    FIELD_DESCRIPTION to description,
+                    FIELD_TYPE to type,
+                    FIELD_START to start,
+                    FIELD_MINUTES to minutes,
+                    FIELD_BILLABLE to billable,
+                    FIELD_INVOICE to invoice
                 )
             )
     }
 
-    fun getNoteItems(noteId: String): Flow<List<NoteItemResponse>> =
-        notesRef
-            .document(noteId)
-            .collection(ITEMS_KEY)
-            .snapshots()
-            .map { snapshot ->
-                snapshot.map { it.toObject<NoteItemResponse>().copy(id = it.id) }
-            }
-
-    fun updateNoteItem(noteId: String, clientNoteItem: ClientNoteItem) {
-        notesRef
-            .document(noteId)
-            .collection(ITEMS_KEY)
-            .document(clientNoteItem.id)
-            .update(
-                mapOf(
-                    FIELD_TYPE to clientNoteItem.type,
-                    FIELD_START to clientNoteItem.start,
-                    FIELD_MINUTES to clientNoteItem.minutes,
-                    FIELD_BILLABLE to clientNoteItem.billable,
-                    FIELD_INVOICE to clientNoteItem.invoice,
-                    FIELD_DESCRIPTION to clientNoteItem.description,
-                    FIELD_DELETED to clientNoteItem.deleted
-                )
-            )
-    }
+    suspend fun getNoteItems(noteId: String, versionId: String): Result<List<NoteItemResponse>> =
+        suspendCoroutine { continuation ->
+            notesRef
+                .document(noteId)
+                .collection(COLLECTION_VERSIONS)
+                .document(versionId)
+                .collection(COLLECTION_ITEMS)
+                .get()
+                .addOnSuccessListener {
+                    continuation.resume(Result.success(it.map { item -> item.toObject<NoteItemResponse>() }))
+                }.addOnFailureListener {
+                    continuation.resumeWithException(it.mapToDomainException())
+                }
+        }
 }

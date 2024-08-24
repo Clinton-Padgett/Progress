@@ -2,11 +2,10 @@ package com.padgett.progressnotes.data.clients
 
 import com.padgett.progressnotes.data.clients.models.ClientResponse
 import com.padgett.progressnotes.data.clients.models.NoteItemResponse
-import com.padgett.progressnotes.data.clients.models.NotesResponse
+import com.padgett.progressnotes.data.clients.models.NoteVersionResponse
 import com.padgett.progressnotes.domain.clients.models.ClientDetails
 import com.padgett.progressnotes.domain.clients.models.ClientNote
 import com.padgett.progressnotes.domain.clients.models.ClientNoteItem
-import kotlin.math.min
 
 fun Pair<String, ClientResponse>.mapToDomain(): ClientDetails =
     ClientDetails(
@@ -16,9 +15,10 @@ fun Pair<String, ClientResponse>.mapToDomain(): ClientDetails =
         isActive = second.active
     )
 
-fun Pair<String, NotesResponse>.mapToDomain(): ClientNote =
+fun Pair<String, NoteVersionResponse>.mapToDomain(): ClientNote =
     ClientNote(
-        id = first,
+        noteId = first,
+        versionId = second.versionId,
         clientId = second.clientId,
         isDraft = second.isDraft,
         created = second.created,
@@ -27,8 +27,6 @@ fun Pair<String, NotesResponse>.mapToDomain(): ClientNote =
 
 fun NoteItemResponse.mapToDomain(): ClientNoteItem =
     ClientNoteItem(
-        id = id!!,
-        clientId = clientId,
         type = type,
         start = start,
         minutes = minutes,
