@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.padgett.progressnotes.ProgressNavArgs
 import com.padgett.progressnotes.domain.ClientRepository
 import com.padgett.progressnotes.domain.clients.models.ClientNoteItem
+import com.padgett.progressnotes.domain.clients.models.InvoiceStatus
 import com.padgett.progressnotes.domain.clients.models.TimeType
 import com.padgett.progressnotes.ui.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,7 +37,7 @@ data class EditNoteUiState(
         val date: LocalDate = LocalDate.now(),
         val startTime: LocalTime = LocalTime.now(),
         val minutes: Long = 0,
-        val invoice: Boolean = true,
+        val invoiceStatus: InvoiceStatus = InvoiceStatus.DRAFT,
         val billable: Boolean = true,
         val description: String = "",
         val deleted: Boolean = false
@@ -165,7 +166,11 @@ class EditNoteViewModel @Inject constructor(
         noteData.value = noteData.value.copy(
             items = noteData.value.items
                 .mapIndexed { i, note ->
-                    if (index == i) note.copy(invoice = !note.invoice) else note
+                    if (index == i) {
+                        note.copy(invoiceStatus = if (note.invoiceStatus == InvoiceStatus.DRAFT) InvoiceStatus.DO_NOT_INVOICE else InvoiceStatus.DRAFT)
+                    } else {
+                        note
+                    }
                 }
         )
         hasUserChanges = true
@@ -208,7 +213,20 @@ class EditNoteViewModel @Inject constructor(
         if (hasUserChanges || !noteData.value.isApproved) {
             showLoadingOverlay()
             viewModelScope.launch {
-                noteData.value = noteData.value.copy(isApproved = true, isDraft = false)
+                if (!noteData.value.isApproved) {
+                    hasUserChanges = true
+                    noteData.value = noteData.value.copy(
+                        isApproved = true,
+                        isDraft = false,
+                        items = noteData.value.items.map { item ->
+                            if (item.invoiceStatus == InvoiceStatus.DRAFT) {
+                                item.copy(invoiceStatus = InvoiceStatus.READY)
+                            } else {
+                                item
+                            }
+                        }
+                    )
+                }
                 saveChanges()
                 navigate.invoke()
                 hideLoadingOverlay()
@@ -230,6 +248,7 @@ class EditNoteViewModel @Inject constructor(
                             noteData.value = noteData.value.copy(
                                 notes = note.notes,
                                 isDraft = note.isDraft,
+                                isApproved = note.isApproved,
                                 isValidEntry = isValid,
                                 items = noteItems.map { it.mapToUiItem() }
                             )
@@ -278,7 +297,7 @@ class EditNoteViewModel @Inject constructor(
             start = Date.from(LocalDateTime.of(date, startTime).atZone(ZoneId.systemDefault()).toInstant()),
             minutes = minutes,
             description = description,
-            invoice = invoice,
+            invoiceStatus = invoiceStatus,
             billable = billable,
             deleted = deleted
         )
@@ -291,7 +310,7 @@ class EditNoteViewModel @Inject constructor(
             startTime = startDateTime.toLocalTime(),
             minutes = minutes,
             description = description,
-            invoice = invoice,
+            invoiceStatus = if (invoiceStatus == InvoiceStatus.READY) InvoiceStatus.INVOICED else invoiceStatus,
             billable = billable,
             deleted = deleted
         )

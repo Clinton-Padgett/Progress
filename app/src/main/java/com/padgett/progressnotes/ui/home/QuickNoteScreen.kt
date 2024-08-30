@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -70,13 +71,15 @@ private fun MainContent(
             .systemBarsPadding()
             .padding(bottom = 80.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp)
+        ) {
             Text(
                 text = "Draft notes",
                 style = Typography.headlineSmall,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(16.dp)
+                modifier = Modifier.align(Alignment.Center)
             )
             ConfirmPrompt(title = "Sign out?", text = "Are you sure?", onConfirmed = onSignOutClicked) {
                 RoundedTextButton(
@@ -91,7 +94,7 @@ private fun MainContent(
             IconButton(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .padding(16.dp),
+                    .padding(8.dp),
                 onClick = onAddNoteClicked
             ) {
                 Icon(

@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.padgett.progressnotes.R
+import com.padgett.progressnotes.domain.clients.models.InvoiceStatus
 import com.padgett.progressnotes.domain.clients.models.TimeType
 import com.padgett.progressnotes.toEpochMillis
 import com.padgett.progressnotes.ui.common.ConfirmPrompt
@@ -124,6 +125,7 @@ private fun MainContent(
         Box(modifier = Modifier.fillMaxWidth()) {
             Text(text = uiState.clientName, modifier = Modifier.align(Alignment.Center))
             IconButton(
+                enabled = !uiState.isApproved,
                 modifier = Modifier.align(Alignment.CenterEnd),
                 onClick = onAddItemClicked
             ) {
@@ -188,6 +190,7 @@ private fun NoteItem(
     onBillableClicked: () -> Unit,
     onDeleteClicked: () -> Unit
 ) {
+    val enableEdit = data.invoiceStatus in listOf(InvoiceStatus.DO_NOT_INVOICE, InvoiceStatus.DRAFT)
     Column(
         modifier = Modifier
             .padding(vertical = 8.dp)
@@ -204,7 +207,7 @@ private fun NoteItem(
                         .weight(1F)
                         .padding(end = 12.dp)
                         .align(Alignment.Bottom)
-                        .clickable { it.invoke() },
+                        .clickable(enabled = enableEdit, onClick = it),
                     value = data.type.mapToDisplay(),
                     label = { Text(text = stringResource(id = R.string.edit_note_screen_type)) },
                     maxLines = 1,
@@ -223,6 +226,7 @@ private fun NoteItem(
         }
         DateTimeRow(
             date = data.date,
+            isEnabled = enableEdit,
             startTime = data.startTime,
             minutes = data.minutes,
             onDateChanged = onStartDateChanged,
@@ -252,21 +256,21 @@ private fun NoteItem(
         )
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
             Text(text = "Show on invoice")
-            IconButton(onClick = onInvoiceClicked) {
+            IconButton(enabled = enableEdit, onClick = onInvoiceClicked) {
                 Icon(
                     modifier = Modifier.size(32.dp),
                     painter = painterResource(
-                        id = if (data.invoice) R.drawable.ic_check_box_selected
-                        else R.drawable.ic_check_box_unselected
+                        id = if (data.invoiceStatus == InvoiceStatus.DO_NOT_INVOICE) R.drawable.ic_check_box_unselected
+                        else R.drawable.ic_check_box_selected
                     ),
                     tint = LightGrey,
                     contentDescription = ""
                 )
             }
             Spacer(modifier = Modifier.weight(1F))
-            if (data.invoice) {
+            if (data.invoiceStatus != InvoiceStatus.DO_NOT_INVOICE) {
                 Text(text = "Billable")
-                IconButton(onClick = onBillableClicked) {
+                IconButton(enabled = enableEdit, onClick = onBillableClicked) {
                     Icon(
                         modifier = Modifier.size(32.dp),
                         painter = painterResource(
@@ -284,6 +288,7 @@ private fun NoteItem(
 
 @Composable
 private fun DateTimeRow(
+    isEnabled: Boolean,
     date: LocalDate,
     startTime: LocalTime,
     minutes: Long,
@@ -303,7 +308,7 @@ private fun DateTimeRow(
             modifier = Modifier
                 .weight(0.6F)
                 .align(Alignment.Bottom)
-                .clickable { isDatePickerShown = true },
+                .clickable(enabled = isEnabled, onClick = { isDatePickerShown = true }),
             value = date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)),
             label = { Text(text = stringResource(id = R.string.edit_note_screen_date)) },
             maxLines = 1,
@@ -314,7 +319,7 @@ private fun DateTimeRow(
             modifier = Modifier
                 .weight(0.5F)
                 .align(Alignment.Bottom)
-                .clickable { isStartTimePickerShown = true }
+                .clickable(enabled = isEnabled, onClick = { isStartTimePickerShown = true })
                 .padding(start = 4.dp),
             maxLines = 1,
             enabled = false,
@@ -326,7 +331,7 @@ private fun DateTimeRow(
             modifier = Modifier
                 .weight(0.5F)
                 .align(Alignment.Bottom)
-                .clickable { isEndTimePickerShown = true }
+                .clickable(enabled = isEnabled, onClick = { isEndTimePickerShown = true })
                 .padding(start = 4.dp),
             maxLines = 1,
             enabled = false,
@@ -353,7 +358,7 @@ private fun DateTimeRow(
                     onStartTimeChanged.invoke(it)
                     isStartTimePickerShown = false
                 } else {
-                    val selectedMinutes = startTime.until(it, ChronoUnit.MINUTES)
+                    val selectedMinutes = startTime.until(it, ChronoUnit.MINUTES) + 1
                     if (isEndTimePickerShown && selectedMinutes > 0L) {
                         onMinutesChanged.invoke(selectedMinutes)
                         isEndTimePickerShown = false

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -60,18 +61,20 @@ private fun MainContent(
             .systemBarsPadding()
             .padding(bottom = 80.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp)
+        ) {
             Text(
                 text = "Clients",
                 style = Typography.headlineSmall,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(16.dp)
+                modifier = Modifier.align(Alignment.Center)
             )
             IconButton(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.TopEnd),
+                    .padding(8.dp)
+                    .align(Alignment.CenterEnd),
                 onClick = onAddClientClicked
             ) {
                 Icon(

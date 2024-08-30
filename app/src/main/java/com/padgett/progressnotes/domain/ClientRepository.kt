@@ -19,4 +19,6 @@ interface ClientRepository {
 
     suspend fun addNoteItems(clientId: String, noteId: String, versionId: String, items: List<ClientNoteItem>)
     suspend fun getNoteItems(noteId: String, versionId: String): Result<List<ClientNoteItem>>
+
+    suspend fun getItemsReadyForInvoice(): Flow<List<Pair<String, ClientNoteItem>>>
 }

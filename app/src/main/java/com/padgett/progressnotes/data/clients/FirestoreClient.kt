@@ -10,6 +10,7 @@ import com.padgett.progressnotes.data.clients.models.ClientResponse
 import com.padgett.progressnotes.data.clients.models.NoteItemResponse
 import com.padgett.progressnotes.data.clients.models.NoteVersionResponse
 import com.padgett.progressnotes.data.mapToDomainException
+import com.padgett.progressnotes.domain.clients.models.InvoiceStatus
 import com.padgett.progressnotes.domain.clients.models.TimeType
 import com.padgett.progressnotes.domain.common.exceptions.GenericException
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +24,6 @@ import kotlin.coroutines.suspendCoroutine
 class FirestoreClient @Inject constructor(private val firebaseFirestore: FirebaseFirestore) {
 
     private companion object {
-        const val COLLECTION_COMPANIES = "companies"
         const val COLLECTION_CLIENTS = "clients"
         const val COLLECTION_NOTES = "notes"
         const val COLLECTION_VERSIONS = "versions"
@@ -36,7 +36,6 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
         const val FIELD_CLIENT_ID = "client_id"
         const val FIELD_NOTE_ID = "note_id"
         const val FIELD_VERSION_ID = "version_id"
-        const val FIELD_ROLES = "roles"
         const val FIELD_IS_DRAFT = "is_draft"
         const val FIELD_IS_APPROVED = "is_approved"
         const val FIELD_CREATOR = "creator"
@@ -47,25 +46,14 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
         const val FIELD_MINUTES = "minutes"
         const val FIELD_INVOICE = "invoice"
         const val FIELD_BILLABLE = "billable"
-        const val FIELD_DELETED = "deleted"
         const val FIELD_NOTES = "notes"
 
-        const val VALUE_USER_ID = "vpKv88ava7Fw8I0WVjQR"
         const val VALUE_COMPANY_ID = "sIwd84Tq9qIwYBEH3dsI"
-        const val VALUE_CREATOR = "creator"
     }
 
-    private val clientsRef by lazy {
-        firebaseFirestore.collection(COLLECTION_COMPANIES)
-            .document(VALUE_COMPANY_ID)
-            .collection(COLLECTION_CLIENTS)
-    }
+    private val clientsRef by lazy { firebaseFirestore.collection(COLLECTION_CLIENTS) }
 
-    private val notesRef by lazy {
-        firebaseFirestore.collection(COLLECTION_COMPANIES)
-            .document(VALUE_COMPANY_ID)
-            .collection(COLLECTION_NOTES)
-    }
+    private val notesRef by lazy { firebaseFirestore.collection(COLLECTION_NOTES) }
 
     private fun getUserId(): String = Firebase.auth.currentUser!!.uid
 
@@ -73,12 +61,11 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
         clientsRef
             .add(
                 hashMapOf(
+                    FIELD_COMPANY_ID to VALUE_COMPANY_ID,
                     FIELD_NAME to name,
                     FIELD_REFERENCE to reference,
                     FIELD_IS_ACTIVE to isActive,
-                    FIELD_ROLES to hashMapOf(
-                        getUserId() to VALUE_CREATOR
-                    )
+                    FIELD_CREATOR to getUserId()
                 )
             )
     }
@@ -88,12 +75,11 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
             .document(id)
             .set(
                 hashMapOf(
+                    FIELD_COMPANY_ID to VALUE_COMPANY_ID,
                     FIELD_NAME to name,
                     FIELD_REFERENCE to reference,
                     FIELD_IS_ACTIVE to isActive,
-                    FIELD_ROLES to hashMapOf(
-                        Firebase.auth.currentUser!!.uid to VALUE_CREATOR
-                    )
+                    FIELD_CREATOR to getUserId()
                 )
             )
     }
@@ -127,18 +113,16 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
             .where(
                 Filter.and(
                     Filter.equalTo(FIELD_COMPANY_ID, VALUE_COMPANY_ID),
-                    Filter.equalTo(FIELD_CREATOR, getUserId()),
-                    Filter.equalTo(FIELD_IS_DRAFT, true),
-                    Filter.equalTo(FIELD_IS_APPROVED, false)
+                    Filter.equalTo(FIELD_CREATOR, getUserId())
                 )
             )
             .snapshots()
             .map { snapshot ->
                 snapshot.documents.map {
-                    val noteId = it.reference.path.split("/")[3]
+                    val noteId = it.reference.path.split("/")[1]
                     noteId to it.toObject<NoteVersionResponse>()!!
                 }.groupBy { it.first }
-                    .map { it.value.maxByOrNull { it.second.created }!! }
+                    .mapNotNull { it.value.maxByOrNull { it.second.created }?.takeIf { it.second.isDraft } }
             }
 
     suspend fun getNote(noteId: String): Result<NoteVersionResponse> =
@@ -206,7 +190,7 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
         start: Date,
         minutes: Long,
         billable: Boolean,
-        invoice: Boolean
+        invoiceStatus: InvoiceStatus
     ) {
         notesRef
             .document(noteId)
@@ -215,13 +199,14 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
             .collection(COLLECTION_ITEMS)
             .add(
                 hashMapOf(
+                    FIELD_COMPANY_ID to VALUE_COMPANY_ID,
                     FIELD_CLIENT_ID to clientId,
                     FIELD_DESCRIPTION to description,
                     FIELD_TYPE to type,
                     FIELD_START to start,
                     FIELD_MINUTES to minutes,
                     FIELD_BILLABLE to billable,
-                    FIELD_INVOICE to invoice
+                    FIELD_INVOICE to invoiceStatus
                 )
             )
     }
@@ -240,4 +225,17 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
                     continuation.resumeWithException(it.mapToDomainException())
                 }
         }
+
+    fun getItemsReadyForInvoice(): Flow<List<NoteItemResponse>> =
+        firebaseFirestore.collectionGroup(COLLECTION_ITEMS)
+            .where(
+                Filter.and(
+                    Filter.equalTo(FIELD_COMPANY_ID, VALUE_COMPANY_ID),
+                    Filter.equalTo(FIELD_INVOICE, InvoiceStatus.READY)
+                )
+            )
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.toObject<NoteItemResponse>()!! }
+            }
 }

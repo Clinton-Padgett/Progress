@@ -7,6 +7,7 @@ data class ClientNote(
     val versionId: String,
     val clientId: String,
     val isDraft: Boolean,
+    val isApproved: Boolean,
     val created: Date,
     val notes: String
 )

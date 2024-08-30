@@ -21,6 +21,7 @@ fun Pair<String, NoteVersionResponse>.mapToDomain(): ClientNote =
         versionId = second.versionId,
         clientId = second.clientId,
         isDraft = second.isDraft,
+        isApproved = second.isApproved,
         created = second.created,
         notes = second.notes
     )
@@ -31,7 +32,7 @@ fun NoteItemResponse.mapToDomain(): ClientNoteItem =
         start = start,
         minutes = minutes,
         description = description,
-        invoice = invoice,
+        invoiceStatus = invoice,
         billable = billable,
         deleted = deleted
     )

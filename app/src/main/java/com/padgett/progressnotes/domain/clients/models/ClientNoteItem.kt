@@ -7,7 +7,7 @@ data class ClientNoteItem(
     val start: Date,
     val minutes: Long = 0,
     val description: String,
-    val invoice: Boolean,
+    val invoiceStatus: InvoiceStatus,
     val billable: Boolean,
     val deleted: Boolean
 )

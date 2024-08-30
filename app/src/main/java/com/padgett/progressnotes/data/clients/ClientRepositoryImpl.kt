@@ -65,10 +65,18 @@ class ClientRepositoryImpl @Inject constructor(
                     start = it.start,
                     minutes = it.minutes,
                     billable = it.billable,
-                    invoice = it.invoice
+                    invoiceStatus = it.invoiceStatus
                 )
             }
         }
     }
+    // endregion
+
+    // region Invoices
+    override suspend fun getItemsReadyForInvoice(): Flow<List<Pair<String, ClientNoteItem>>> =
+        firestoreClient.getItemsReadyForInvoice()
+            .map { clients ->
+                clients.map { it.clientId to it.mapToDomain() }
+            }
     // endregion
 }

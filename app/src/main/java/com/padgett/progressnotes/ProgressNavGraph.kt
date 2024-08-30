@@ -105,7 +105,7 @@ fun ProgressNavGraph(
             BackHandler(true) {
                 // Do nothing
             }
-            InvoicesScreen(viewModel = viewModel)
+            InvoicesScreen(viewModel = viewModel, onInvoiceSelected = {})
         }
         composable(route = ProgressRoute.CLIENT_ADD) {
             val viewModel = getViewModel<EditClientViewModel>(context = context, navCallbacks = navCallbacks)
@@ -138,7 +138,7 @@ fun ProgressNavGraph(
         ) {
             val viewModel = getViewModel<EditNoteViewModel>(context = context, navCallbacks = navCallbacks)
             EditNoteScreen(viewModel = viewModel) {
-                navController.popBackStack()
+                navController.popBackStack(ProgressRouteName.QUICK_NOTE, true)
             }
         }
         composable(
