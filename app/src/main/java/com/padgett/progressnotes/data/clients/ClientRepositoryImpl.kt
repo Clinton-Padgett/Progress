@@ -15,6 +15,8 @@ class ClientRepositoryImpl @Inject constructor(
     private val firestoreClient: FirestoreClient
 ) : ClientRepository {
 
+    override val pricePerHour: Float = 193.50F
+
     // region Clients
     override suspend fun addClient(name: String, reference: String, isActive: Boolean) {
         firestoreClient.addClient(name, reference, isActive)
@@ -73,10 +75,16 @@ class ClientRepositoryImpl @Inject constructor(
     // endregion
 
     // region Invoices
-    override suspend fun getItemsReadyForInvoice(): Flow<List<Pair<String, ClientNoteItem>>> =
+    override suspend fun getItemsReadyForInvoice(): Flow<List<ClientNoteItem>> =
         firestoreClient.getItemsReadyForInvoice()
             .map { clients ->
-                clients.map { it.clientId to it.mapToDomain() }
+                clients.map { it.mapToDomain() }
+            }
+
+    override suspend fun getItemsReadyForInvoice(clientId: String): Flow<List<ClientNoteItem>> =
+        firestoreClient.getItemsReadyForInvoice()
+            .map { clients ->
+                clients.map { it.mapToDomain() }
             }
     // endregion
 }

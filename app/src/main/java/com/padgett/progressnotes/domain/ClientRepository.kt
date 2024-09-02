@@ -6,6 +6,8 @@ import com.padgett.progressnotes.domain.clients.models.ClientNoteItem
 import kotlinx.coroutines.flow.Flow
 
 interface ClientRepository {
+    val pricePerHour: Float
+
     suspend fun addClient(name: String, reference: String, isActive: Boolean)
     suspend fun updateClient(id: String, name: String, reference: String, isActive: Boolean)
 
@@ -20,5 +22,6 @@ interface ClientRepository {
     suspend fun addNoteItems(clientId: String, noteId: String, versionId: String, items: List<ClientNoteItem>)
     suspend fun getNoteItems(noteId: String, versionId: String): Result<List<ClientNoteItem>>
 
-    suspend fun getItemsReadyForInvoice(): Flow<List<Pair<String, ClientNoteItem>>>
+    suspend fun getItemsReadyForInvoice(): Flow<List<ClientNoteItem>>
+    suspend fun getItemsReadyForInvoice(clientId: String): Flow<List<ClientNoteItem>>
 }

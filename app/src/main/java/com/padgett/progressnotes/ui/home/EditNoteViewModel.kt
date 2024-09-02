@@ -293,6 +293,7 @@ class EditNoteViewModel @Inject constructor(
 
     private fun EditNoteUiState.Item.mapToDomain(): ClientNoteItem =
         ClientNoteItem(
+            clientId = clientId,
             type = type,
             start = Date.from(LocalDateTime.of(date, startTime).atZone(ZoneId.systemDefault()).toInstant()),
             minutes = minutes,

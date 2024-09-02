@@ -28,6 +28,7 @@ fun Pair<String, NoteVersionResponse>.mapToDomain(): ClientNote =
 
 fun NoteItemResponse.mapToDomain(): ClientNoteItem =
     ClientNoteItem(
+        clientId = clientId,
         type = type,
         start = start,
         minutes = minutes,

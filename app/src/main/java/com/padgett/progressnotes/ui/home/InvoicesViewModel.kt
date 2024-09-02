@@ -2,6 +2,7 @@ package com.padgett.progressnotes.ui.home
 
 import androidx.lifecycle.viewModelScope
 import com.padgett.progressnotes.domain.ClientRepository
+import com.padgett.progressnotes.domain.clients.models.InvoiceStatus
 import com.padgett.progressnotes.ui.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,10 @@ data class InvoicesUiState(
 ) {
     data class InvoiceDetails(
         val clientId: String,
-        val clientName: String
+        val clientName: String,
+        val startDate: Long,
+        val endDate: Long,
+        val totalPrice: Float
     )
 }
 
@@ -37,12 +41,16 @@ class InvoicesViewModel @Inject constructor(private val clientRepository: Client
     init {
         viewModelScope.launch {
             combine(clientRepository.getClients(), clientRepository.getItemsReadyForInvoice()) { clients, items ->
-                items.groupBy { it.first }
-                    .keys
-                    .map { clientId ->
+                items.groupBy { it.clientId }
+                    .map { item ->
                         InvoicesUiState.InvoiceDetails(
-                            clientId = clientId,
-                            clientName = clients.first { it.id == clientId }.name
+                            clientId = item.key,
+                            clientName = clients.first { it.id == item.key }.name,
+                            startDate = item.value.minOf { it.start.time },
+                            endDate = item.value.maxOf { it.start.time },
+                            totalPrice = (
+                                    item.value.filter { it.billable && it.invoiceStatus == InvoiceStatus.READY && !it.deleted }
+                                        .sumOf { it.minutes } / 60) * clientRepository.pricePerHour
                         )
                     }
             }.collect {

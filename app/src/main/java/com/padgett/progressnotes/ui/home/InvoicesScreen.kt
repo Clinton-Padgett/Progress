@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +27,9 @@ import com.padgett.progressnotes.ui.theme.Charcoal
 import com.padgett.progressnotes.ui.theme.LightGrey
 import com.padgett.progressnotes.ui.theme.ProgressNotesTheme
 import com.padgett.progressnotes.ui.theme.Typography
+import java.text.DateFormat
+import java.text.NumberFormat
+import java.util.Date
 
 @Composable
 fun InvoicesScreen(
@@ -57,7 +61,7 @@ private fun MainContent(
                 .height(80.dp)
         ) {
             Text(
-                text = "Draft notes",
+                text = "Invoices",
                 style = Typography.headlineSmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -75,17 +79,38 @@ private fun MainContent(
 
 @Composable
 private fun InvoiceCard(data: InvoicesUiState.InvoiceDetails, onClicked: (clientId: String) -> Unit) {
-    Text(
-        text = data.clientName,
-        style = Typography.titleLarge,
+    val format = NumberFormat.getCurrencyInstance()
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .border(1.dp, LightGrey, RoundedCornerShape(8.dp))
             .background(Charcoal)
-            .clickable { onClicked.invoke(data.clientName) }
-            .padding(horizontal = 12.dp, vertical = 20.dp)
-    )
+            .clickable { onClicked.invoke(data.clientId) },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1F)
+                .padding(12.dp)
+        ) {
+            Text(
+                text = data.clientName,
+                style = Typography.titleLarge,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            Text(
+                text = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(data.startDate)) +
+                        " - " + DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(data.endDate)),
+                style = Typography.bodySmall
+            )
+        }
+        Text(
+            text = NumberFormat.getCurrencyInstance().format(data.totalPrice),
+            style = Typography.bodyLarge,
+            modifier = Modifier.padding(12.dp)
+        )
+    }
 }
 
 @Preview
@@ -98,14 +123,23 @@ private fun PreviewInvoicesScreen() {
                     InvoicesUiState.InvoiceDetails(
                         clientId = "1",
                         clientName = "Joe Blow",
+                        startDate = Date().time,
+                        endDate = Date().time,
+                        totalPrice = 2010.50F
                     ),
                     InvoicesUiState.InvoiceDetails(
                         clientId = "2",
                         clientName = "Clinton Padgett",
+                        startDate = Date().time,
+                        endDate = Date().time,
+                        totalPrice = 2010.50F
                     ),
                     InvoicesUiState.InvoiceDetails(
                         clientId = "3",
                         clientName = "Alex Padgett",
+                        startDate = Date().time,
+                        endDate = Date().time,
+                        totalPrice = 2010.50F
                     )
                 )
             ),
