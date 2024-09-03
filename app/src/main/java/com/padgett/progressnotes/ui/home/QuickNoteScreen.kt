@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,14 +22,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.padgett.progressnotes.R
-import com.padgett.progressnotes.ui.common.ConfirmPrompt
-import com.padgett.progressnotes.ui.common.RoundedTextButton
 import com.padgett.progressnotes.ui.theme.Charcoal
 import com.padgett.progressnotes.ui.theme.LightGrey
 import com.padgett.progressnotes.ui.theme.Linen
@@ -43,27 +39,22 @@ import java.util.Date
 fun QuickNoteScreen(
     viewModel: QuickNoteViewModel,
     onNoteSelected: (clientId: String, noteId: String) -> Unit,
-    onAddNoteClicked: () -> Unit,
-    onSignedOut: () -> Unit
+    onAddNoteClicked: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     MainContent(
         uiState = uiState,
         onNoteSelected = onNoteSelected,
-        onAddNoteClicked = onAddNoteClicked,
-        onSignOutClicked = {
-            viewModel.onSignOutClicked()
-            onSignedOut.invoke()
-        })
+        onAddNoteClicked = onAddNoteClicked
+    )
 }
 
 @Composable
 private fun MainContent(
     uiState: QuickNoteUiState,
     onNoteSelected: (clientId: String, noteId: String) -> Unit,
-    onAddNoteClicked: () -> Unit,
-    onSignOutClicked: () -> Unit
+    onAddNoteClicked: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -81,16 +72,6 @@ private fun MainContent(
                 style = Typography.headlineSmall,
                 modifier = Modifier.align(Alignment.Center)
             )
-            ConfirmPrompt(title = "Sign out?", text = "Are you sure?", onConfirmed = onSignOutClicked) {
-                RoundedTextButton(
-                    text = stringResource(id = R.string.home_screen_sign_out),
-                    onClick = it,
-                    contentPadding = PaddingValues(4.dp),
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 16.dp)
-                )
-            }
             IconButton(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
@@ -183,8 +164,7 @@ private fun PreviewQuickNoteScreen() {
                 )
             ),
             onNoteSelected = { _, _ -> },
-            onAddNoteClicked = {},
-            onSignOutClicked = {}
+            onAddNoteClicked = {}
         )
     }
 }

@@ -3,6 +3,7 @@ package com.padgett.progressnotes.domain
 import kotlinx.coroutines.flow.Flow
 
 interface AuthenticationRepository {
+    // region Firebase auth
     fun isSignedIn(): Boolean
     suspend fun getSignedInState(): Flow<Boolean>
 
@@ -13,4 +14,9 @@ interface AuthenticationRepository {
 
     fun signOut()
     suspend fun deleteAccount(): Result<Unit>
+    // endregion
+
+    // region Xero
+    suspend fun isXeroAuthenticated(): Flow<Boolean>
+    // endregion
 }

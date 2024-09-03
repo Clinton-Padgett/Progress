@@ -26,7 +26,9 @@
     <string name="phone_sign_in_screen_code_disclaimer">By tapping "Continue", an SMS may be sent. Message  &amp; data rates may apply.</string>
 
     <!-- Home screen -->
-    <string name="home_screen_sign_out">Sign out</string>
+    <string name="settings_screen_sign_out">Sign out</string>
+    <string name="settings_screen_xero_connect">Connect Xero</string>
+    <string name="settings_screen_xero_disconnect">Disconnect Xero</string>
 
     <!-- Edit Client screen -->
     <string name="edit_client_screen_error">All fields required</string>

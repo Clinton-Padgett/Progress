@@ -15,6 +15,7 @@ object ProgressRouteName {
     const val ADD_NOTE = "add_note"
     const val CLIENTS = "clients"
     const val INVOICES = "invoices"
+    const val SETTINGS = "settings"
     const val INVOICE_PREVIEW = "invoice_preview"
     const val CLIENT_ADD = "client_add"
     const val CLIENT_EDIT = "client_edit"
@@ -28,6 +29,7 @@ object ProgressRoute {
     const val ADD_NOTE = ProgressRouteName.ADD_NOTE
     const val CLIENTS = ProgressRouteName.CLIENTS
     const val INVOICES = ProgressRouteName.INVOICES
+    const val SETTINGS = ProgressRouteName.SETTINGS
     const val INVOICE_PREVIEW = "${ProgressRouteName.INVOICE_PREVIEW}/{$CLIENT_ID_ARG}"
     const val CLIENT_ADD = ProgressRouteName.CLIENT_ADD
     const val CLIENT_EDIT = "${ProgressRouteName.CLIENT_EDIT}/{$CLIENT_ID_ARG}"
@@ -54,6 +56,10 @@ class ProgressNavigationActions(private val navController: NavHostController) {
 
     fun navigateToInvoices() {
         navController.navigate(ProgressRoute.INVOICES)
+    }
+
+    fun navigateToSettings() {
+        navController.navigate(ProgressRoute.SETTINGS)
     }
 
     fun navigateToInvoicePreview(clientId: String) {

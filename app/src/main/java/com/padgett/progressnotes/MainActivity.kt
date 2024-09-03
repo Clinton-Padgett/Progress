@@ -98,7 +98,8 @@ class MainActivity : ComponentActivity() {
                         if (currentRoute in listOf(
                                 ProgressRoute.QUICK_NOTE,
                                 ProgressRoute.CLIENTS,
-                                ProgressRoute.INVOICES
+                                ProgressRoute.INVOICES,
+                                ProgressRoute.SETTINGS
                             )
                         ) {
                             BottomNavBar(currentRoute = currentRoute!!, navActions = navActions)
@@ -122,6 +123,7 @@ class MainActivity : ComponentActivity() {
         var selectedItem by remember {
             mutableIntStateOf(
                 when (currentRoute) {
+                    ProgressRoute.SETTINGS -> 3
                     ProgressRoute.INVOICES -> 2
                     ProgressRoute.CLIENTS -> 1
                     else -> 0
@@ -131,7 +133,7 @@ class MainActivity : ComponentActivity() {
         NavigationBar {
             NavigationBarItem(
                 icon = { Icon(painter = painterResource(id = R.drawable.ic_person_notes), contentDescription = "") },
-                label = { Text("Quick note") },
+                label = { Text("Notes") },
                 selected = selectedItem == 0,
                 onClick = {
                     selectedItem = 0
@@ -154,6 +156,15 @@ class MainActivity : ComponentActivity() {
                 onClick = {
                     selectedItem = 2
                     navActions.navigateToInvoices()
+                }
+            )
+            NavigationBarItem(
+                icon = { Icon(painter = painterResource(id = R.drawable.ic_settings), contentDescription = "") },
+                label = { Text("Settings") },
+                selected = selectedItem == 3,
+                onClick = {
+                    selectedItem = 3
+                    navActions.navigateToSettings()
                 }
             )
         }

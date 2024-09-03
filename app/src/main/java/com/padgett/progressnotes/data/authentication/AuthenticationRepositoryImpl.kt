@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.math.max
@@ -50,4 +51,8 @@ class AuthenticationRepositoryImpl @Inject constructor(
         withContext(ioDispatcher) {
             firebasePhoneAuthenticator.deleteAccount()
         }
+
+    override suspend fun isXeroAuthenticated(): Flow<Boolean> {
+        return flowOf(false)
+    }
 }

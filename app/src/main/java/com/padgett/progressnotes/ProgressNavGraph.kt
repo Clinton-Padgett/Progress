@@ -36,6 +36,8 @@ import com.padgett.progressnotes.ui.home.InvoicesScreen
 import com.padgett.progressnotes.ui.home.InvoicesViewModel
 import com.padgett.progressnotes.ui.home.QuickNoteScreen
 import com.padgett.progressnotes.ui.home.QuickNoteViewModel
+import com.padgett.progressnotes.ui.home.SettingsScreen
+import com.padgett.progressnotes.ui.home.SettingsViewModel
 
 data class NavCallbacks(
     val isLoadingOverlayVisible: (Boolean) -> Unit,
@@ -80,8 +82,7 @@ fun ProgressNavGraph(
             QuickNoteScreen(
                 viewModel = viewModel,
                 onNoteSelected = navActions::navigateToEditNote,
-                onAddNoteClicked = navActions::navigateToAddNoteRoute,
-                onSignedOut = navActions::navigateToSignIn
+                onAddNoteClicked = navActions::navigateToAddNoteRoute
             )
         }
         composable(ProgressRoute.ADD_NOTE) {
@@ -108,6 +109,17 @@ fun ProgressNavGraph(
                 // Do nothing
             }
             InvoicesScreen(viewModel = viewModel, onInvoiceSelected = navActions::navigateToInvoicePreview)
+        }
+        composable(ProgressRoute.SETTINGS) {
+            val viewModel = getViewModel<SettingsViewModel>(context = context, navCallbacks = navCallbacks)
+            BackHandler(true) {
+                // Do nothing
+            }
+            SettingsScreen(
+                viewModel = viewModel,
+                onSignedOut = navActions::navigateToSignIn,
+                onXeroSignInClicked = {}
+            )
         }
         composable(
             route = ProgressRoute.INVOICE_PREVIEW,

@@ -1,7 +1,6 @@
 package com.padgett.progressnotes.ui.home
 
 import androidx.lifecycle.viewModelScope
-import com.padgett.progressnotes.domain.AuthenticationRepository
 import com.padgett.progressnotes.domain.ClientRepository
 import com.padgett.progressnotes.ui.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,7 +27,6 @@ data class QuickNoteUiState(
 
 @HiltViewModel
 class QuickNoteViewModel @Inject constructor(
-    private val authRepository: AuthenticationRepository,
     private val clientRepository: ClientRepository
 ) : BaseViewModel() {
 
@@ -61,9 +59,5 @@ class QuickNoteViewModel @Inject constructor(
                     notes.value = QuickNoteUiState(it)
                 }
         }
-    }
-
-    fun onSignOutClicked() {
-        authRepository.signOut()
     }
 }
