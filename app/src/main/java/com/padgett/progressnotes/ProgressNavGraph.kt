@@ -30,6 +30,8 @@ import com.padgett.progressnotes.ui.home.EditClientScreen
 import com.padgett.progressnotes.ui.home.EditClientViewModel
 import com.padgett.progressnotes.ui.home.EditNoteScreen
 import com.padgett.progressnotes.ui.home.EditNoteViewModel
+import com.padgett.progressnotes.ui.home.InvoicePreviewScreen
+import com.padgett.progressnotes.ui.home.InvoicePreviewViewModel
 import com.padgett.progressnotes.ui.home.InvoicesScreen
 import com.padgett.progressnotes.ui.home.InvoicesViewModel
 import com.padgett.progressnotes.ui.home.QuickNoteScreen
@@ -105,7 +107,21 @@ fun ProgressNavGraph(
             BackHandler(true) {
                 // Do nothing
             }
-            InvoicesScreen(viewModel = viewModel, onInvoiceSelected = {})
+            InvoicesScreen(viewModel = viewModel, onInvoiceSelected = navActions::navigateToInvoicePreview)
+        }
+        composable(
+            route = ProgressRoute.INVOICE_PREVIEW,
+            arguments = listOf(
+                navArgument(ProgressNavArgs.CLIENT_ID_ARG) { type = NavType.StringType }
+            )
+        ) {
+            val viewModel = getViewModel<InvoicePreviewViewModel>(context = context, navCallbacks = navCallbacks)
+            BackHandler(true) {
+                // Do nothing
+            }
+            InvoicePreviewScreen(viewModel = viewModel) {
+                navController.popBackStack()
+            }
         }
         composable(route = ProgressRoute.CLIENT_ADD) {
             val viewModel = getViewModel<EditClientViewModel>(context = context, navCallbacks = navCallbacks)

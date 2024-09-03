@@ -6,6 +6,7 @@ import com.padgett.progressnotes.domain.clients.models.TimeType
 import java.util.Date
 
 data class NoteItemResponse(
+    val id: String = "",
     @get:PropertyName("client_id") @set:PropertyName("client_id") var clientId: String = "",
     val type: TimeType = TimeType.TRAVEL,
     val start: Date = Date(),

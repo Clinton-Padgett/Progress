@@ -50,7 +50,7 @@ class InvoicesViewModel @Inject constructor(private val clientRepository: Client
                             endDate = item.value.maxOf { it.start.time },
                             totalPrice = (
                                     item.value.filter { it.billable && it.invoiceStatus == InvoiceStatus.READY && !it.deleted }
-                                        .sumOf { it.minutes } / 60) * clientRepository.pricePerHour
+                                        .sumOf { it.minutes } / 60F) * clientRepository.pricePerHour
                         )
                     }
             }.collect {

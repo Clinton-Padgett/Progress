@@ -79,7 +79,6 @@ private fun MainContent(
 
 @Composable
 private fun InvoiceCard(data: InvoicesUiState.InvoiceDetails, onClicked: (clientId: String) -> Unit) {
-    val format = NumberFormat.getCurrencyInstance()
     Row(
         modifier = Modifier
             .fillMaxWidth()

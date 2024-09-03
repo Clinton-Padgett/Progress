@@ -239,7 +239,7 @@ private fun NoteItem(
             } else {
                 "Total time: ${LocalTime.MIN.plus(Duration.ofMinutes(data.minutes))}"
             },
-            color = if (data.minutes <= 0L) Color.Red else LightGrey,
+            color = if (data.minutes <= 0L) Color.Yellow else LightGrey,
             modifier = Modifier
                 .padding(top = 8.dp)
                 .fillMaxWidth(),

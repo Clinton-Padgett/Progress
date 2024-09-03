@@ -82,7 +82,7 @@ class ClientRepositoryImpl @Inject constructor(
             }
 
     override suspend fun getItemsReadyForInvoice(clientId: String): Flow<List<ClientNoteItem>> =
-        firestoreClient.getItemsReadyForInvoice()
+        firestoreClient.getItemsReadyForInvoice(clientId)
             .map { clients ->
                 clients.map { it.mapToDomain() }
             }

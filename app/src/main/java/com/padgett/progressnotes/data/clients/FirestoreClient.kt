@@ -220,7 +220,7 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
                 .collection(COLLECTION_ITEMS)
                 .get()
                 .addOnSuccessListener {
-                    continuation.resume(Result.success(it.map { item -> item.toObject<NoteItemResponse>() }))
+                    continuation.resume(Result.success(it.map { item -> item.toObject<NoteItemResponse>().copy(id = item.id) }))
                 }.addOnFailureListener {
                     continuation.resumeWithException(it.mapToDomainException())
                 }
@@ -236,6 +236,20 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
             )
             .snapshots()
             .map { snapshot ->
-                snapshot.documents.map { it.toObject<NoteItemResponse>()!! }
+                snapshot.documents.map { it.toObject<NoteItemResponse>()!!.copy(id = it.id) }
+            }
+
+    fun getItemsReadyForInvoice(clientId: String): Flow<List<NoteItemResponse>> =
+        firebaseFirestore.collectionGroup(COLLECTION_ITEMS)
+            .where(
+                Filter.and(
+                    Filter.equalTo(FIELD_COMPANY_ID, VALUE_COMPANY_ID),
+                    Filter.equalTo(FIELD_INVOICE, InvoiceStatus.READY),
+                    Filter.equalTo(FIELD_CLIENT_ID, clientId)
+                )
+            )
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.toObject<NoteItemResponse>()!!.copy(id = it.id) }
             }
 }
