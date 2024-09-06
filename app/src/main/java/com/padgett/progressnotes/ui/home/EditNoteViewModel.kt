@@ -22,6 +22,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Date
+import java.util.UUID
 import javax.inject.Inject
 
 data class EditNoteUiState(
@@ -33,6 +34,7 @@ data class EditNoteUiState(
     val items: List<Item> = listOf()
 ) {
     data class Item(
+        val autoId: String = UUID.randomUUID().toString(),
         val type: TimeType = TimeType.OFFICE,
         val date: LocalDate = LocalDate.now(),
         val startTime: LocalTime = LocalTime.now(),
@@ -61,9 +63,7 @@ class EditNoteViewModel @Inject constructor(
                 val isValid = it.items.all { it.deleted || (it.description.isNotBlank() && it.minutes > 0) } && it.notes.isNotBlank()
                 it.copy(
                     isValidEntry = isValid,
-                    items = it.items
-                        .filterNot { item -> item.deleted }
-                        .sortedBy { LocalDateTime.of(it.date, it.startTime) }
+                    items = it.items.filterNot { item -> item.deleted }
                 )
             }
             .stateIn(
@@ -94,8 +94,13 @@ class EditNoteViewModel @Inject constructor(
     }
 
     fun onAddItemClicked() {
+        val maxExistingDate = noteData.value.items.takeIf { it.isNotEmpty() }
+            ?.maxOf {
+                LocalDateTime.of(it.date, it.startTime.plusMinutes(it.minutes))
+            }
+        val newItemTime = if (maxExistingDate == null || LocalDateTime.now().isAfter(maxExistingDate)) LocalDateTime.now() else maxExistingDate
         noteData.value = noteData.value.copy(
-            items = noteData.value.items.plus(EditNoteUiState.Item())
+            items = noteData.value.items.plus(EditNoteUiState.Item(date = newItemTime.toLocalDate(), startTime = newItemTime.toLocalTime()))
         )
         hasUserChanges = true
     }
@@ -105,31 +110,41 @@ class EditNoteViewModel @Inject constructor(
         hasUserChanges = true
     }
 
-    fun onTypeChanged(index: Int, type: TimeType) {
+    fun onTypeChanged(id: String, type: TimeType) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .mapIndexed { i, note ->
-                    if (index == i) note.copy(type = type) else note
+                .map { note ->
+                    if (id == note.autoId) {
+                        if (type == TimeType.TRAVEL && note.description.isBlank()) {
+                            when (noteData.value.items.count { it.type == TimeType.TRAVEL }) {
+                                0 -> note.copy(type = type, description = "Travel to clients home")
+                                1 -> note.copy(type = type, description = "Travel from clients home")
+                                else -> note.copy(type = type)
+                            }
+                        } else {
+                            note.copy(type = type)
+                        }
+                    } else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onStartDateChanged(index: Int, date: LocalDate) {
+    fun onStartDateChanged(id: String, date: LocalDate) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .mapIndexed { i, note ->
-                    if (index == i) note.copy(date = date) else note
+                .map { note ->
+                    if (id == note.autoId) note.copy(date = date) else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onStartTimeChanged(index: Int, time: LocalTime) {
+    fun onStartTimeChanged(id: String, time: LocalTime) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .mapIndexed { i, note ->
-                    if (index == i) {
+                .map { note ->
+                    if (id == note.autoId) {
                         val newMinutes = if (note.minutes > 0L) note.minutes + time.until(note.startTime, ChronoUnit.MINUTES) else 0L
                         if (newMinutes > 0L) {
                             note.copy(minutes = newMinutes, startTime = time)
@@ -142,31 +157,31 @@ class EditNoteViewModel @Inject constructor(
         hasUserChanges = true
     }
 
-    fun onMinutesChanged(index: Int, minutes: Long) {
+    fun onMinutesChanged(id: String, minutes: Long) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .mapIndexed { i, note ->
-                    if (index == i) note.copy(minutes = minutes) else note
+                .map { note ->
+                    if (id == note.autoId) note.copy(minutes = minutes) else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onDescriptionChanged(index: Int, text: String) {
+    fun onDescriptionChanged(id: String, text: String) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .mapIndexed { i, note ->
-                    if (index == i) note.copy(description = text) else note
+                .map { note ->
+                    if (id == note.autoId) note.copy(description = text) else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onInvoiceClicked(index: Int) {
+    fun onInvoiceClicked(id: String) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .mapIndexed { i, note ->
-                    if (index == i) {
+                .map { note ->
+                    if (id == note.autoId) {
                         note.copy(invoiceStatus = if (note.invoiceStatus == InvoiceStatus.DRAFT) InvoiceStatus.DO_NOT_INVOICE else InvoiceStatus.DRAFT)
                     } else {
                         note
@@ -176,21 +191,21 @@ class EditNoteViewModel @Inject constructor(
         hasUserChanges = true
     }
 
-    fun onBillableClicked(index: Int) {
+    fun onBillableClicked(id: String) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .mapIndexed { i, note ->
-                    if (index == i) note.copy(billable = !note.billable) else note
+                .map { note ->
+                    if (id == note.autoId) note.copy(billable = !note.billable) else note
                 }
         )
         hasUserChanges = true
     }
 
-    fun onDeleteItemClicked(index: Int) {
+    fun onDeleteItemClicked(id: String) {
         noteData.value = noteData.value.copy(
             items = noteData.value.items
-                .mapIndexed { i, note ->
-                    if (index == i) note.copy(deleted = true) else note
+                .map { note ->
+                    if (id == note.autoId) note.copy(deleted = true) else note
                 }
         )
         hasUserChanges = true

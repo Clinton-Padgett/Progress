@@ -107,10 +107,11 @@ class InvoicePreviewViewModel @Inject constructor(
         items.groupBy { it.type }
             .map {
                 val minutes = it.value.filter { it.enabled }.sumOf { it.minutes }
+                val totalPrice = it.value.filter { it.enabled }.sumOf { it.totalPrice.toDouble() }
                 InvoicePreviewUiState.Total(
                     type = it.key,
                     minutes = minutes,
-                    totalPrice = (minutes / 60F) * clientRepository.pricePerHour
+                    totalPrice = totalPrice.toFloat()
                 )
             }
 }

@@ -13,84 +13,72 @@ val Typography = Typography(
         fontFamily = fontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 40.sp,
-        lineHeight = 28.sp,
-        color = Linen
+        lineHeight = 28.sp
     ),
     headlineMedium = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 24.sp,
-        lineHeight = 28.8.sp,
-        color = Linen
+        lineHeight = 28.8.sp
     ),
     headlineSmall = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 20.sp,
-        lineHeight = 24.sp,
-        color = Linen
+        lineHeight = 24.sp
     ),
     titleLarge = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 18.sp,
-        lineHeight = 21.6.sp,
-        color = Linen
+        lineHeight = 21.6.sp
     ),
     titleMedium = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
-        lineHeight = 19.2.sp,
-        color = Linen
+        lineHeight = 19.2.sp
     ),
     titleSmall = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
-        lineHeight = 16.8.sp,
-        color = Linen
+        lineHeight = 16.8.sp
     ),
     bodyLarge = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 18.sp,
-        lineHeight = 23.4.sp,
-        color = LightGrey
+        lineHeight = 23.4.sp
     ),
     bodyMedium = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
-        lineHeight = 20.8.sp,
-        color = LightGrey
+        lineHeight = 20.8.sp
     ),
     bodySmall = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
-        lineHeight = 18.2.sp,
-        color = LightGrey
+        lineHeight = 18.2.sp
     ),
     labelLarge = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
-        lineHeight = 15.6.sp,
-        color = LightGrey
+        lineHeight = 15.6.sp
     ),
     labelMedium = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 10.sp,
-        lineHeight = 13.sp,
-        color = LightGrey
+        lineHeight = 13.sp
     ),
     labelSmall = TextStyle(
         fontFamily = fontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 10.sp,
-        lineHeight = 13.66.sp,
-        color = LightGrey
+        lineHeight = 13.66.sp
     )
 )

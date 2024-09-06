@@ -26,7 +26,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,7 +42,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -56,10 +57,6 @@ import com.padgett.progressnotes.toEpochMillis
 import com.padgett.progressnotes.ui.common.ConfirmPrompt
 import com.padgett.progressnotes.ui.common.PrimaryTextButton
 import com.padgett.progressnotes.ui.common.SecondaryTextButton
-import com.padgett.progressnotes.ui.theme.Charcoal
-import com.padgett.progressnotes.ui.theme.LightGrey
-import com.padgett.progressnotes.ui.theme.Linen
-import com.padgett.progressnotes.ui.theme.MidGrey
 import com.padgett.progressnotes.ui.theme.ProgressNotesTheme
 import com.padgett.progressnotes.ui.theme.Typography
 import java.time.Duration
@@ -104,14 +101,14 @@ private fun MainContent(
     onNotesChanged: (String) -> Unit,
     onAddItemClicked: () -> Unit,
     onApproveClicked: () -> Unit,
-    onTypeChanged: (index: Int, TimeType) -> Unit,
-    onStartDateChanged: (index: Int, LocalDate) -> Unit,
-    onStartTimeChanged: (index: Int, LocalTime) -> Unit,
-    onMinutesChanged: (index: Int, Long) -> Unit,
-    onDescriptionChanged: (index: Int, String) -> Unit,
-    onInvoiceClicked: (index: Int) -> Unit,
-    onBillableClicked: (index: Int) -> Unit,
-    onDeleteItemClicked: (index: Int) -> Unit,
+    onTypeChanged: (id: String, TimeType) -> Unit,
+    onStartDateChanged: (id: String, LocalDate) -> Unit,
+    onStartTimeChanged: (id: String, LocalTime) -> Unit,
+    onMinutesChanged: (id: String, Long) -> Unit,
+    onDescriptionChanged: (id: String, String) -> Unit,
+    onInvoiceClicked: (id: String) -> Unit,
+    onBillableClicked: (id: String) -> Unit,
+    onDeleteItemClicked: (id: String) -> Unit,
     onCloseClicked: () -> Unit,
 ) {
     Column(
@@ -139,14 +136,14 @@ private fun MainContent(
             itemsIndexed(uiState.items) { index, data ->
                 NoteItem(
                     data = data,
-                    onTypeChanged = { onTypeChanged.invoke(index, it) },
-                    onStartDateChanged = { onStartDateChanged.invoke(index, it) },
-                    onStartTimeChanged = { onStartTimeChanged.invoke(index, it) },
-                    onMinutesChanged = { onMinutesChanged.invoke(index, it) },
-                    onDescriptionChanged = { onDescriptionChanged.invoke(index, it) },
-                    onInvoiceClicked = { onInvoiceClicked.invoke(index) },
-                    onBillableClicked = { onBillableClicked.invoke(index) },
-                    onDeleteClicked = { onDeleteItemClicked.invoke(index) }
+                    onTypeChanged = { onTypeChanged.invoke(data.autoId, it) },
+                    onStartDateChanged = { onStartDateChanged.invoke(data.autoId, it) },
+                    onStartTimeChanged = { onStartTimeChanged.invoke(data.autoId, it) },
+                    onMinutesChanged = { onMinutesChanged.invoke(data.autoId, it) },
+                    onDescriptionChanged = { onDescriptionChanged.invoke(data.autoId, it) },
+                    onInvoiceClicked = { onInvoiceClicked.invoke(data.autoId) },
+                    onBillableClicked = { onBillableClicked.invoke(data.autoId) },
+                    onDeleteClicked = { onDeleteItemClicked.invoke(data.autoId) }
                 )
             }
             item {
@@ -157,22 +154,25 @@ private fun MainContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 12.dp),
-                    onValueChange = onNotesChanged
-                )
-                PrimaryTextButton(
-                    text = "Approve",
-                    isEnabled = uiState.isValidEntry,
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = onApproveClicked
+                    onValueChange = onNotesChanged,
+                    isError = uiState.notes.isBlank()
                 )
                 if (uiState.isDraft) {
-                    SecondaryTextButton(
-                        text = "Close", modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp),
-                        onClick = onCloseClicked
-                    )
+                    ConfirmPrompt(title = "Approve for invoicing?", text = "Are you sure?", onConfirmed = onApproveClicked) {
+                        PrimaryTextButton(
+                            text = "Approve",
+                            isEnabled = uiState.isValidEntry,
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = it
+                        )
+                    }
                 }
+                SecondaryTextButton(
+                    text = "Close", modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                    onClick = onCloseClicked
+                )
             }
         }
     }
@@ -193,9 +193,9 @@ private fun NoteItem(
     val enableEdit = data.invoiceStatus in listOf(InvoiceStatus.DO_NOT_INVOICE, InvoiceStatus.DRAFT)
     Column(
         modifier = Modifier
-            .padding(vertical = 8.dp)
-            .background(Charcoal, RoundedCornerShape(8.dp))
-            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp, top = 4.dp),
+            .padding(vertical = 8.dp, horizontal = 4.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
+            .padding(start = 12.dp, end = 12.dp, bottom = 4.dp, top = 8.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -210,6 +210,12 @@ private fun NoteItem(
                         .clickable(enabled = enableEdit, onClick = it),
                     value = data.type.mapToDisplay(),
                     label = { Text(text = stringResource(id = R.string.edit_note_screen_type)) },
+                    colors = OutlinedTextFieldDefaults.colors().copy(
+                        disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        disabledIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    textStyle = Typography.bodyMedium,
                     maxLines = 1,
                     enabled = false,
                     onValueChange = {}
@@ -239,7 +245,8 @@ private fun NoteItem(
             } else {
                 "Total time: ${LocalTime.MIN.plus(Duration.ofMinutes(data.minutes))}"
             },
-            color = if (data.minutes <= 0L) Color.Yellow else LightGrey,
+            color = if (data.minutes <= 0L) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary,
+            style = Typography.titleMedium,
             modifier = Modifier
                 .padding(top = 8.dp)
                 .fillMaxWidth(),
@@ -249,13 +256,13 @@ private fun NoteItem(
             label = { Text(text = "Description") },
             value = data.description,
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
-            onValueChange = onDescriptionChanged
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = onDescriptionChanged,
+            textStyle = Typography.bodyMedium,
+            isError = data.description.isBlank()
         )
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-            Text(text = "Show on invoice")
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+            Text(text = "Show on invoice", style = Typography.bodyMedium)
             IconButton(enabled = enableEdit, onClick = onInvoiceClicked) {
                 Icon(
                     modifier = Modifier.size(32.dp),
@@ -263,13 +270,12 @@ private fun NoteItem(
                         id = if (data.invoiceStatus == InvoiceStatus.DO_NOT_INVOICE) R.drawable.ic_check_box_unselected
                         else R.drawable.ic_check_box_selected
                     ),
-                    tint = LightGrey,
                     contentDescription = ""
                 )
             }
             Spacer(modifier = Modifier.weight(1F))
             if (data.invoiceStatus != InvoiceStatus.DO_NOT_INVOICE) {
-                Text(text = "Billable")
+                Text(text = "Billable", style = Typography.bodyMedium)
                 IconButton(enabled = enableEdit, onClick = onBillableClicked) {
                     Icon(
                         modifier = Modifier.size(32.dp),
@@ -277,7 +283,6 @@ private fun NoteItem(
                             id = if (data.billable) R.drawable.ic_check_box_selected
                             else R.drawable.ic_check_box_unselected
                         ),
-                        tint = LightGrey,
                         contentDescription = ""
                     )
                 }
@@ -309,8 +314,14 @@ private fun DateTimeRow(
                 .weight(0.6F)
                 .align(Alignment.Bottom)
                 .clickable(enabled = isEnabled, onClick = { isDatePickerShown = true }),
-            value = date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)),
+            value = date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)),
             label = { Text(text = stringResource(id = R.string.edit_note_screen_date)) },
+            colors = OutlinedTextFieldDefaults.colors().copy(
+                disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            textStyle = Typography.bodyMedium,
             maxLines = 1,
             enabled = false,
             onValueChange = {}
@@ -321,6 +332,12 @@ private fun DateTimeRow(
                 .align(Alignment.Bottom)
                 .clickable(enabled = isEnabled, onClick = { isStartTimePickerShown = true })
                 .padding(start = 4.dp),
+            colors = OutlinedTextFieldDefaults.colors().copy(
+                disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            textStyle = Typography.bodyMedium,
             maxLines = 1,
             enabled = false,
             value = startTime.format(DateTimeFormatter.ofPattern("h:mm a")) ?: "",
@@ -333,8 +350,15 @@ private fun DateTimeRow(
                 .align(Alignment.Bottom)
                 .clickable(enabled = isEnabled, onClick = { isEndTimePickerShown = true })
                 .padding(start = 4.dp),
+            colors = OutlinedTextFieldDefaults.colors().copy(
+                disabledTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledLabelColor = if (endTime == null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledIndicatorColor = if (endTime == null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+            ),
+            textStyle = Typography.bodyMedium,
             maxLines = 1,
             enabled = false,
+            isError = endTime == null,
             value = endTime?.format(DateTimeFormatter.ofPattern("h:mm a")) ?: "",
             label = { Text(text = stringResource(id = R.string.edit_note_screen_end)) },
             onValueChange = {}
@@ -395,7 +419,8 @@ private fun DatePickerModal(
             ) {
                 Text(
                     text = stringResource(id = android.R.string.ok),
-                    color = if (datePickerState.selectedDateMillis != null) Linen else MidGrey,
+                    color = if (datePickerState.selectedDateMillis != null)
+                        MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.surfaceVariant,
                     style = Typography.titleMedium
                 )
             }
@@ -492,7 +517,7 @@ private fun EditClientPreview() {
                         EditNoteUiState.Item(
                             type = TimeType.HOME_VISIT,
                             date = LocalDate.now().minusDays(1L),
-                            minutes = 0L,
+                            minutes = 87L,
                             startTime = LocalTime.now(),
                             description = "Did some home visit"
                         ),
@@ -501,7 +526,7 @@ private fun EditClientPreview() {
                             date = LocalDate.now(),
                             startTime = LocalTime.now(),
                             minutes = 0L,
-                            description = "Travel time"
+                            description = ""
                         )
                     )
                 ),

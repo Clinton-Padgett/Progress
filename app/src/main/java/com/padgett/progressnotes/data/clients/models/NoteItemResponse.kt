@@ -12,7 +12,7 @@ data class NoteItemResponse(
     val start: Date = Date(),
     val minutes: Long = 0,
     val description: String = "",
-    val invoice: InvoiceStatus = InvoiceStatus.DRAFT,
-    val billable: Boolean = true,
-    val deleted: Boolean = false
+    @get:PropertyName("invoice_status") @set:PropertyName("invoice_status") var invoiceStatus: InvoiceStatus = InvoiceStatus.DRAFT,
+    @get:PropertyName("is_billable") @set:PropertyName("is_billable") var billable: Boolean = true,
+    @get:PropertyName("is_deleted") @set:PropertyName("is_deleted") var deleted: Boolean = false
 )

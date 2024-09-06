@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,8 +24,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.padgett.progressnotes.ui.theme.Charcoal
-import com.padgett.progressnotes.ui.theme.LightGrey
 import com.padgett.progressnotes.ui.theme.ProgressNotesTheme
 import com.padgett.progressnotes.ui.theme.Typography
 import java.text.DateFormat
@@ -83,8 +82,8 @@ private fun InvoiceCard(data: InvoicesUiState.InvoiceDetails, onClicked: (client
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .border(1.dp, LightGrey, RoundedCornerShape(8.dp))
-            .background(Charcoal)
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp))
             .clickable { onClicked.invoke(data.clientId) },
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -96,18 +95,21 @@ private fun InvoiceCard(data: InvoicesUiState.InvoiceDetails, onClicked: (client
             Text(
                 text = data.clientName,
                 style = Typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
                 text = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(data.startDate)) +
                         " - " + DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(data.endDate)),
-                style = Typography.bodySmall
+                style = Typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
             )
         }
         Text(
             text = NumberFormat.getCurrencyInstance().format(data.totalPrice),
             style = Typography.bodyLarge,
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(12.dp),
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
         )
     }
 }

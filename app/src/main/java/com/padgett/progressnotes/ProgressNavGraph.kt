@@ -164,9 +164,12 @@ fun ProgressNavGraph(
                 navArgument(ProgressNavArgs.CLIENT_ID_ARG) { type = NavType.StringType }
             )
         ) {
+            BackHandler(true) {
+                // Do nothing
+            }
             val viewModel = getViewModel<EditNoteViewModel>(context = context, navCallbacks = navCallbacks)
             EditNoteScreen(viewModel = viewModel) {
-                navController.popBackStack(ProgressRouteName.QUICK_NOTE, true)
+                navController.popBackStack(ProgressRouteName.QUICK_NOTE, false)
             }
         }
         composable(

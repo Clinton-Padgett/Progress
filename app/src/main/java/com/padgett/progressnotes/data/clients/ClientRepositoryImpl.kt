@@ -67,7 +67,8 @@ class ClientRepositoryImpl @Inject constructor(
                     start = it.start,
                     minutes = it.minutes,
                     billable = it.billable,
-                    invoiceStatus = it.invoiceStatus
+                    invoiceStatus = it.invoiceStatus,
+                    isDeleted = it.deleted
                 )
             }
         }

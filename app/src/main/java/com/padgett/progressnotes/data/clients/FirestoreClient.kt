@@ -24,6 +24,7 @@ import kotlin.coroutines.suspendCoroutine
 class FirestoreClient @Inject constructor(private val firebaseFirestore: FirebaseFirestore) {
 
     private companion object {
+        const val COLLECTION_COMPANIES = "companies"
         const val COLLECTION_CLIENTS = "clients"
         const val COLLECTION_NOTES = "notes"
         const val COLLECTION_VERSIONS = "versions"
@@ -32,6 +33,7 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
         const val FIELD_NAME = "name"
         const val FIELD_REFERENCE = "reference"
         const val FIELD_IS_ACTIVE = "is_active"
+        const val FIELD_IS_DELETED = "is_deleted"
         const val FIELD_COMPANY_ID = "company_id"
         const val FIELD_CLIENT_ID = "client_id"
         const val FIELD_NOTE_ID = "note_id"
@@ -44,16 +46,26 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
         const val FIELD_TYPE = "type"
         const val FIELD_START = "start"
         const val FIELD_MINUTES = "minutes"
-        const val FIELD_INVOICE = "invoice"
-        const val FIELD_BILLABLE = "billable"
+        const val FIELD_INVOICE_STATUS = "invoice_status"
+        const val FIELD_IS_BILLABLE = "is_billable"
         const val FIELD_NOTES = "notes"
 
         const val VALUE_COMPANY_ID = "sIwd84Tq9qIwYBEH3dsI"
     }
 
-    private val clientsRef by lazy { firebaseFirestore.collection(COLLECTION_CLIENTS) }
+    private val clientsRef by lazy {
+        firebaseFirestore
+            .collection(COLLECTION_COMPANIES)
+            .document(VALUE_COMPANY_ID)
+            .collection(COLLECTION_CLIENTS)
+    }
 
-    private val notesRef by lazy { firebaseFirestore.collection(COLLECTION_NOTES) }
+    private val notesRef by lazy {
+        firebaseFirestore
+            .collection(COLLECTION_COMPANIES)
+            .document(VALUE_COMPANY_ID)
+            .collection(COLLECTION_NOTES)
+    }
 
     private fun getUserId(): String = Firebase.auth.currentUser!!.uid
 
@@ -104,7 +116,7 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
                         continuation.resumeWithException(GenericException())
                     }
                 }.addOnFailureListener {
-                    continuation.resumeWithException(it.mapToDomainException())
+                    continuation.resume(Result.failure(it.mapToDomainException()))
                 }
         }
 
@@ -119,7 +131,7 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
             .snapshots()
             .map { snapshot ->
                 snapshot.documents.map {
-                    val noteId = it.reference.path.split("/")[1]
+                    val noteId = it.reference.path.split("/")[3]
                     noteId to it.toObject<NoteVersionResponse>()!!
                 }.groupBy { it.first }
                     .mapNotNull { it.value.maxByOrNull { it.second.created }?.takeIf { it.second.isDraft } }
@@ -128,7 +140,12 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
     suspend fun getNote(noteId: String): Result<NoteVersionResponse> =
         suspendCoroutine { continuation ->
             firebaseFirestore.collectionGroup(COLLECTION_VERSIONS)
-                .where(Filter.equalTo(FIELD_NOTE_ID, noteId))
+                .where(
+                    Filter.and(
+                        Filter.equalTo(FIELD_COMPANY_ID, VALUE_COMPANY_ID),
+                        Filter.equalTo(FIELD_NOTE_ID, noteId)
+                    )
+                )
                 .get()
                 .addOnSuccessListener { snapshot ->
                     val response = snapshot
@@ -136,7 +153,7 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
                         .maxByOrNull { it.created }!!
                     continuation.resume(Result.success(response))
                 }.addOnFailureListener {
-                    continuation.resumeWithException(it.mapToDomainException())
+                    continuation.resume(Result.failure(it.mapToDomainException()))
                 }
         }
 
@@ -190,7 +207,8 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
         start: Date,
         minutes: Long,
         billable: Boolean,
-        invoiceStatus: InvoiceStatus
+        invoiceStatus: InvoiceStatus,
+        isDeleted: Boolean
     ) {
         notesRef
             .document(noteId)
@@ -205,8 +223,9 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
                     FIELD_TYPE to type,
                     FIELD_START to start,
                     FIELD_MINUTES to minutes,
-                    FIELD_BILLABLE to billable,
-                    FIELD_INVOICE to invoiceStatus
+                    FIELD_IS_BILLABLE to billable,
+                    FIELD_INVOICE_STATUS to invoiceStatus,
+                    FIELD_IS_DELETED to isDeleted
                 )
             )
     }
@@ -222,7 +241,7 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
                 .addOnSuccessListener {
                     continuation.resume(Result.success(it.map { item -> item.toObject<NoteItemResponse>().copy(id = item.id) }))
                 }.addOnFailureListener {
-                    continuation.resumeWithException(it.mapToDomainException())
+                    continuation.resume(Result.failure(it.mapToDomainException()))
                 }
         }
 
@@ -231,7 +250,7 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
             .where(
                 Filter.and(
                     Filter.equalTo(FIELD_COMPANY_ID, VALUE_COMPANY_ID),
-                    Filter.equalTo(FIELD_INVOICE, InvoiceStatus.READY)
+                    Filter.equalTo(FIELD_INVOICE_STATUS, InvoiceStatus.READY)
                 )
             )
             .snapshots()
@@ -244,7 +263,7 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
             .where(
                 Filter.and(
                     Filter.equalTo(FIELD_COMPANY_ID, VALUE_COMPANY_ID),
-                    Filter.equalTo(FIELD_INVOICE, InvoiceStatus.READY),
+                    Filter.equalTo(FIELD_INVOICE_STATUS, InvoiceStatus.READY),
                     Filter.equalTo(FIELD_CLIENT_ID, clientId)
                 )
             )

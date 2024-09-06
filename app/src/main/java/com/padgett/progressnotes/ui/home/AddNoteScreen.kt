@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -27,8 +28,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.padgett.progressnotes.ui.theme.Charcoal
-import com.padgett.progressnotes.ui.theme.LightGrey
 import com.padgett.progressnotes.ui.theme.ProgressNotesTheme
 import com.padgett.progressnotes.ui.theme.Typography
 import kotlinx.coroutines.launch
@@ -133,11 +132,12 @@ private fun ClientCard(data: AddNoteUiState.Client, onClientSelected: (AddNoteUi
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .border(1.dp, LightGrey, RoundedCornerShape(8.dp))
-            .background(Charcoal, RoundedCornerShape(8.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+            .background(color = MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp))
             .clickable { onClientSelected.invoke(data) }
             .padding(20.dp),
-        style = Typography.titleLarge
+        style = Typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSecondaryContainer
     )
 }
 

@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,9 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.padgett.progressnotes.R
-import com.padgett.progressnotes.ui.theme.Charcoal
-import com.padgett.progressnotes.ui.theme.LightGrey
-import com.padgett.progressnotes.ui.theme.Linen
 import com.padgett.progressnotes.ui.theme.ProgressNotesTheme
 import com.padgett.progressnotes.ui.theme.Typography
 import java.text.SimpleDateFormat
@@ -80,7 +78,6 @@ private fun MainContent(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_add_note),
-                    tint = Linen,
                     contentDescription = ""
                 )
             }
@@ -99,8 +96,8 @@ private fun NoteCard(data: QuickNoteUiState.NoteDetails, onClicked: (clientId: S
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .border(1.dp, LightGrey, RoundedCornerShape(8.dp))
-            .background(Charcoal)
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp))
             .clickable { onClicked.invoke(data.clientId, data.noteId) },
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -113,12 +110,14 @@ private fun NoteCard(data: QuickNoteUiState.NoteDetails, onClicked: (clientId: S
                 Text(
                     text = data.clientName,
                     style = Typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier
                         .padding(bottom = 4.dp)
                         .weight(1F)
                 )
                 Text(
                     text = SimpleDateFormat.getDateInstance().format(data.created),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     style = Typography.bodySmall,
                 )
             }
@@ -126,6 +125,7 @@ private fun NoteCard(data: QuickNoteUiState.NoteDetails, onClicked: (clientId: S
             Text(
                 text = data.notes,
                 style = Typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )

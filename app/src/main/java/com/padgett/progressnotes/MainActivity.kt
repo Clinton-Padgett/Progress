@@ -39,9 +39,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.padgett.progressnotes.ui.theme.Charcoal
 import com.padgett.progressnotes.ui.theme.ProgressNotesTheme
 import com.padgett.progressnotes.ui.theme.TransparentBlack
+import com.padgett.progressnotes.ui.theme.Typography
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -175,7 +175,7 @@ class MainActivity : ComponentActivity() {
         SnackbarHost(hostState = snackbarHostState) { snackbarData ->
             Snackbar(
                 content = {
-                    Text(text = snackbarData.visuals.message, color = Charcoal)
+                    Text(text = snackbarData.visuals.message, style = Typography.bodyLarge)
                 },
                 dismissAction = {
                     IconButton(

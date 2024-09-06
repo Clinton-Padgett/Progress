@@ -17,22 +17,18 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.padgett.progressnotes.R
 import com.padgett.progressnotes.domain.clients.models.ClientDetails
-import com.padgett.progressnotes.ui.theme.Charcoal
-import com.padgett.progressnotes.ui.theme.LightGrey
-import com.padgett.progressnotes.ui.theme.Linen
-import com.padgett.progressnotes.ui.theme.MidGrey
 import com.padgett.progressnotes.ui.theme.ProgressNotesTheme
 import com.padgett.progressnotes.ui.theme.Typography
 
@@ -79,7 +75,6 @@ private fun MainContent(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_person_add),
-                    tint = Linen,
                     contentDescription = ""
                 )
             }
@@ -98,8 +93,8 @@ private fun ClientCard(data: ClientDetails, onClientSelected: (id: String) -> Un
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .border(1.dp, LightGrey, RoundedCornerShape(8.dp))
-            .background(Charcoal)
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp))
             .clickable { onClientSelected.invoke(data.id) },
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -111,26 +106,27 @@ private fun ClientCard(data: ClientDetails, onClientSelected: (id: String) -> Un
             Text(
                 text = data.name,
                 style = Typography.titleLarge,
-                modifier = Modifier.padding(bottom = 4.dp)
+                modifier = Modifier.padding(bottom = 4.dp),
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
             Text(
                 text = data.reference,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 style = Typography.bodySmall
             )
         }
         if (!data.isActive) {
-            Text(text = "Inactive", style = Typography.bodyLarge, color = Color.Red)
+            Text(text = "Inactive", style = Typography.bodyLarge, color = MaterialTheme.colorScheme.error)
         }
         IconButton(
             modifier = Modifier
                 .padding(8.dp)
-                .border(1.dp, MidGrey, androidx.compose.foundation.shape.CircleShape),
+                .border(1.dp, MaterialTheme.colorScheme.outline, androidx.compose.foundation.shape.CircleShape),
             onClick = { onEditClicked.invoke(data.id) }
         ) {
             Icon(
                 modifier = Modifier.size(28.dp),
                 painter = painterResource(id = R.drawable.ic_edit),
-                tint = Linen,
                 contentDescription = ""
             )
         }

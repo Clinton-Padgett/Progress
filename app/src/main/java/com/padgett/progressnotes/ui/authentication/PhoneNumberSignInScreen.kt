@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,8 +40,6 @@ import com.padgett.progressnotes.ui.authentication.PhoneNumberSignInUiViewState.
 import com.padgett.progressnotes.ui.common.BackNavBar
 import com.padgett.progressnotes.ui.common.PrimaryTextButton
 import com.padgett.progressnotes.ui.common.stringResource
-import com.padgett.progressnotes.ui.theme.Black
-import com.padgett.progressnotes.ui.theme.MidGrey
 import com.padgett.progressnotes.ui.theme.ProgressNotesTheme
 import com.padgett.progressnotes.ui.theme.Typography
 
@@ -79,7 +78,6 @@ private fun MainContent(
                         CountryPickerUtils.isMobileNumberValid(uiState.countryCode + uiState.phoneNumber))
     Surface(
         modifier = Modifier
-            .background(Black)
             .systemBarsPadding()
             .fillMaxSize()
             .imePadding()
@@ -171,7 +169,7 @@ private fun PhoneNumberEntry(
             text = "Phone number. Preview unavailable.",
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .background(MidGrey)
+                .background(MaterialTheme.colorScheme.secondaryContainer)
                 .padding(16.dp)
                 .fillMaxWidth()
         )
@@ -185,7 +183,11 @@ private fun PhoneNumberEntry(
             onCountrySelected = { onCountryCodeChanged.invoke(it.countryPhoneNumberCode) },
             countryFlagDimensions = Dimensions(width = 40.dp, height = 25.dp),
             placeholder = {
-                Text(text = stringResource(R.string.phone_sign_in_screen_mobile_hint), style = Typography.bodyMedium, color = MidGrey)
+                Text(
+                    text = stringResource(R.string.phone_sign_in_screen_mobile_hint),
+                    style = Typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondary
+                )
             },
             shape = RoundedCornerShape(6.dp),
             onDone = {
@@ -218,7 +220,7 @@ fun CodeTextField(
                         modifier = Modifier
                             .border(
                                 1.dp,
-                                color = MidGrey,
+                                color = MaterialTheme.colorScheme.outline,
                                 shape = RoundedCornerShape(6.dp)
                             )
                             .width(44.dp)

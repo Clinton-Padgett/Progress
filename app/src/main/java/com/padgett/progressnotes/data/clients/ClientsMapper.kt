@@ -34,7 +34,7 @@ fun NoteItemResponse.mapToDomain(): ClientNoteItem =
         start = start,
         minutes = minutes,
         description = description,
-        invoiceStatus = invoice,
+        invoiceStatus = invoiceStatus,
         billable = billable,
         deleted = deleted
     )
