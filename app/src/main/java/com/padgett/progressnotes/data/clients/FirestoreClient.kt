@@ -7,6 +7,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
 import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
+import com.padgett.progressnotes.BuildConfig
 import com.padgett.progressnotes.data.clients.models.ClientResponse
 import com.padgett.progressnotes.data.clients.models.NoteItemResponse
 import com.padgett.progressnotes.data.clients.models.NoteResponse
@@ -48,7 +49,7 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
         const val FIELD_IS_BILLABLE = "is_billable"
         const val FIELD_NOTES = "notes"
 
-        const val VALUE_COMPANY_ID = "sIwd84Tq9qIwYBEH3dsI"
+        val VALUE_COMPANY_ID = if(BuildConfig.DEBUG) "sIwd84Tq9qIwYBEH3dsI" else "PpkO5yshORZScsoFKewh"
     }
 
     private val clientsRef by lazy {
