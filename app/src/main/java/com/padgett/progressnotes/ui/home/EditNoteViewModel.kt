@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.padgett.progressnotes.ProgressNavArgs
 import com.padgett.progressnotes.domain.ClientRepository
+import com.padgett.progressnotes.domain.clients.models.ClientNote
 import com.padgett.progressnotes.domain.clients.models.ClientNoteItem
 import com.padgett.progressnotes.domain.clients.models.InvoiceStatus
 import com.padgett.progressnotes.domain.clients.models.TimeType
@@ -22,7 +23,6 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Date
-import java.util.UUID
 import javax.inject.Inject
 
 data class EditNoteUiState(
@@ -34,7 +34,7 @@ data class EditNoteUiState(
     val items: List<Item> = listOf()
 ) {
     data class Item(
-        val autoId: String = UUID.randomUUID().toString(),
+        val id: String,
         val type: TimeType = TimeType.OFFICE,
         val date: LocalDate = LocalDate.now(),
         val startTime: LocalTime = LocalTime.now(),
@@ -63,7 +63,7 @@ class EditNoteViewModel @Inject constructor(
                 val isValid = it.items.all { it.deleted || (it.description.isNotBlank() && it.minutes > 0) } && it.notes.isNotBlank()
                 it.copy(
                     isValidEntry = isValid,
-                    items = it.items.filterNot { item -> item.deleted }
+                    items = it.items.filterNot { item -> item.deleted }.sortedBy { it.startTime }
                 )
             }
             .stateIn(
@@ -94,15 +94,21 @@ class EditNoteViewModel @Inject constructor(
     }
 
     fun onAddItemClicked() {
-        val maxExistingDate = noteData.value.items.takeIf { it.isNotEmpty() }
-            ?.maxOf {
-                LocalDateTime.of(it.date, it.startTime.plusMinutes(it.minutes))
-            }
-        val newItemTime = if (maxExistingDate == null || LocalDateTime.now().isAfter(maxExistingDate)) LocalDateTime.now() else maxExistingDate
-        noteData.value = noteData.value.copy(
-            items = noteData.value.items.plus(EditNoteUiState.Item(date = newItemTime.toLocalDate(), startTime = newItemTime.toLocalTime()))
-        )
-        hasUserChanges = true
+        viewModelScope.launch {
+            val maxExistingDate = noteData.value.items.takeIf { it.isNotEmpty() }
+                ?.maxOf {
+                    LocalDateTime.of(it.date, it.startTime.plusMinutes(it.minutes))
+                }
+            val newItemTime = if (maxExistingDate == null || LocalDateTime.now().isAfter(maxExistingDate)) LocalDateTime.now() else maxExistingDate
+            val newId = clientRepository.getNewNoteItemId(noteId!!)
+            val newItem = EditNoteUiState.Item(id = newId, date = newItemTime.toLocalDate(), startTime = newItemTime.toLocalTime())
+            clientRepository.saveNoteItem(clientId, noteId!!, newItem.mapToDomain())
+
+            noteData.value = noteData.value.copy(
+                items = noteData.value.items.plus(newItem.copy(id = newId))
+            )
+            hasUserChanges = true
+        }
     }
 
     fun onNotesChanged(text: String) {
@@ -114,7 +120,7 @@ class EditNoteViewModel @Inject constructor(
         noteData.value = noteData.value.copy(
             items = noteData.value.items
                 .map { note ->
-                    if (id == note.autoId) {
+                    if (id == note.id) {
                         if (type == TimeType.TRAVEL && note.description.isBlank()) {
                             when (noteData.value.items.count { it.type == TimeType.TRAVEL }) {
                                 0 -> note.copy(type = type, description = "Travel to clients home")
@@ -134,7 +140,7 @@ class EditNoteViewModel @Inject constructor(
         noteData.value = noteData.value.copy(
             items = noteData.value.items
                 .map { note ->
-                    if (id == note.autoId) note.copy(date = date) else note
+                    if (id == note.id) note.copy(date = date) else note
                 }
         )
         hasUserChanges = true
@@ -144,7 +150,7 @@ class EditNoteViewModel @Inject constructor(
         noteData.value = noteData.value.copy(
             items = noteData.value.items
                 .map { note ->
-                    if (id == note.autoId) {
+                    if (id == note.id) {
                         val newMinutes = if (note.minutes > 0L) note.minutes + time.until(note.startTime, ChronoUnit.MINUTES) else 0L
                         if (newMinutes > 0L) {
                             note.copy(minutes = newMinutes, startTime = time)
@@ -161,7 +167,7 @@ class EditNoteViewModel @Inject constructor(
         noteData.value = noteData.value.copy(
             items = noteData.value.items
                 .map { note ->
-                    if (id == note.autoId) note.copy(minutes = minutes) else note
+                    if (id == note.id) note.copy(minutes = minutes) else note
                 }
         )
         hasUserChanges = true
@@ -171,7 +177,7 @@ class EditNoteViewModel @Inject constructor(
         noteData.value = noteData.value.copy(
             items = noteData.value.items
                 .map { note ->
-                    if (id == note.autoId) note.copy(description = text) else note
+                    if (id == note.id) note.copy(description = text) else note
                 }
         )
         hasUserChanges = true
@@ -181,7 +187,7 @@ class EditNoteViewModel @Inject constructor(
         noteData.value = noteData.value.copy(
             items = noteData.value.items
                 .map { note ->
-                    if (id == note.autoId) {
+                    if (id == note.id) {
                         note.copy(invoiceStatus = if (note.invoiceStatus == InvoiceStatus.DRAFT) InvoiceStatus.DO_NOT_INVOICE else InvoiceStatus.DRAFT)
                     } else {
                         note
@@ -195,7 +201,7 @@ class EditNoteViewModel @Inject constructor(
         noteData.value = noteData.value.copy(
             items = noteData.value.items
                 .map { note ->
-                    if (id == note.autoId) note.copy(billable = !note.billable) else note
+                    if (id == note.id) note.copy(billable = !note.billable) else note
                 }
         )
         hasUserChanges = true
@@ -205,7 +211,7 @@ class EditNoteViewModel @Inject constructor(
         noteData.value = noteData.value.copy(
             items = noteData.value.items
                 .map { note ->
-                    if (id == note.autoId) note.copy(deleted = true) else note
+                    if (id == note.id) note.copy(deleted = true) else note
                 }
         )
         hasUserChanges = true
@@ -255,7 +261,7 @@ class EditNoteViewModel @Inject constructor(
         if (noteId != null && noteId!!.isNotBlank()) {
             clientRepository.getNote(noteId!!)
                 .onSuccess { note ->
-                    clientRepository.getNoteItems(noteId!!, note.versionId)
+                    clientRepository.getNoteItems(noteId!!)
                         .onSuccess { noteItems ->
                             val isValid = noteItems
                                 .all { it.deleted || (it.description.isNotBlank() && it.minutes > 0) }
@@ -289,25 +295,22 @@ class EditNoteViewModel @Inject constructor(
                 if (noteId == null) {
                     noteId = clientRepository.getNewNoteId(clientId)
                 }
-                val versionId = clientRepository.addNoteVersion(
-                    clientId = clientId,
+                clientRepository.saveNote(
                     noteId = noteId!!,
                     notes = notes,
                     isDraft = isDraft,
                     isApproved = isApproved
                 )
-                clientRepository.addNoteItems(
-                    noteId = noteId!!,
-                    clientId = clientId,
-                    versionId = versionId,
-                    items = items.map { it.mapToDomain() }
-                )
+                items.forEach {
+                    clientRepository.saveNoteItem(clientId = clientId, noteId = noteId!!, it.mapToDomain())
+                }
             }
         }
     }
 
     private fun EditNoteUiState.Item.mapToDomain(): ClientNoteItem =
         ClientNoteItem(
+            id = id,
             clientId = clientId,
             type = type,
             start = Date.from(LocalDateTime.of(date, startTime).atZone(ZoneId.systemDefault()).toInstant()),
@@ -321,6 +324,7 @@ class EditNoteViewModel @Inject constructor(
     private fun ClientNoteItem.mapToUiItem(): EditNoteUiState.Item {
         val startDateTime = Instant.ofEpochMilli(start.time).atZone(ZoneId.systemDefault()).toLocalDateTime()
         return EditNoteUiState.Item(
+            id = id,
             type = type,
             date = startDateTime.toLocalDate(),
             startTime = startDateTime.toLocalTime(),

@@ -42,6 +42,7 @@ class InvoicesViewModel @Inject constructor(private val clientRepository: Client
         viewModelScope.launch {
             combine(clientRepository.getClients(), clientRepository.getItemsReadyForInvoice()) { clients, items ->
                 items.groupBy { it.clientId }
+                    .filter { it.value.isNotEmpty() && it.key.isNotBlank() }
                     .map { item ->
                         InvoicesUiState.InvoiceDetails(
                             clientId = item.key,

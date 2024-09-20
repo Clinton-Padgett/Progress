@@ -136,14 +136,14 @@ private fun MainContent(
             itemsIndexed(uiState.items) { index, data ->
                 NoteItem(
                     data = data,
-                    onTypeChanged = { onTypeChanged.invoke(data.autoId, it) },
-                    onStartDateChanged = { onStartDateChanged.invoke(data.autoId, it) },
-                    onStartTimeChanged = { onStartTimeChanged.invoke(data.autoId, it) },
-                    onMinutesChanged = { onMinutesChanged.invoke(data.autoId, it) },
-                    onDescriptionChanged = { onDescriptionChanged.invoke(data.autoId, it) },
-                    onInvoiceClicked = { onInvoiceClicked.invoke(data.autoId) },
-                    onBillableClicked = { onBillableClicked.invoke(data.autoId) },
-                    onDeleteClicked = { onDeleteItemClicked.invoke(data.autoId) }
+                    onTypeChanged = { onTypeChanged.invoke(data.id, it) },
+                    onStartDateChanged = { onStartDateChanged.invoke(data.id, it) },
+                    onStartTimeChanged = { onStartTimeChanged.invoke(data.id, it) },
+                    onMinutesChanged = { onMinutesChanged.invoke(data.id, it) },
+                    onDescriptionChanged = { onDescriptionChanged.invoke(data.id, it) },
+                    onInvoiceClicked = { onInvoiceClicked.invoke(data.id) },
+                    onBillableClicked = { onBillableClicked.invoke(data.id) },
+                    onDeleteClicked = { onDeleteItemClicked.invoke(data.id) }
                 )
             }
             item {
@@ -515,6 +515,7 @@ private fun EditClientPreview() {
                     clientName = " Clinton Padgett",
                     items = listOf(
                         EditNoteUiState.Item(
+                            id = "a",
                             type = TimeType.HOME_VISIT,
                             date = LocalDate.now().minusDays(1L),
                             minutes = 87L,
@@ -522,6 +523,7 @@ private fun EditClientPreview() {
                             description = "Did some home visit"
                         ),
                         EditNoteUiState.Item(
+                            id = "b",
                             type = TimeType.TRAVEL,
                             date = LocalDate.now(),
                             startTime = LocalTime.now(),

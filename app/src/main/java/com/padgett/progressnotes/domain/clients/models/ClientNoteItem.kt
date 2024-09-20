@@ -3,7 +3,7 @@ package com.padgett.progressnotes.domain.clients.models
 import java.util.Date
 
 data class ClientNoteItem(
-    val id: String? = null,
+    val id: String,
     val clientId: String,
     val type: TimeType,
     val start: Date,
