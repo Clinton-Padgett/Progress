@@ -33,13 +33,18 @@ import com.padgett.progressnotes.ui.theme.ProgressNotesTheme
 import com.padgett.progressnotes.ui.theme.Typography
 
 @Composable
-fun ClientsScreen(viewModel: ClientsViewModel, navigateToAddClient: () -> Unit, navigateToEditClient: (String) -> Unit) {
+fun ClientsScreen(
+    viewModel: ClientsViewModel,
+    navigateToAddClient: () -> Unit,
+    navigateToViewClientNotes: (String) -> Unit,
+    navigateToEditClient: (String) -> Unit
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     MainContent(
         uiState = uiState,
         onAddClientClicked = navigateToAddClient,
-        onClientSelected = viewModel::onClientSelected,
+        onClientSelected = navigateToViewClientNotes,
         onEditClicked = navigateToEditClient
     )
 }

@@ -35,8 +35,4 @@ class ClientsViewModel @Inject constructor(clientRepository: ClientRepository) :
             }
         }
     }
-
-    fun onClientSelected(id: String) {
-
-    }
 }

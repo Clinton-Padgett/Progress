@@ -40,6 +40,9 @@ class ClientRepositoryImpl @Inject constructor(
     override fun getDraftNotes(): Flow<List<ClientNote>> =
         firestoreClient.getDraftNotes().map { notes -> notes.map { it.mapToDomain() } }
 
+    override suspend fun getNotesForClient(clientId: String): Flow<List<ClientNote>> =
+        firestoreClient.getNotesByClientId(clientId).map { notes -> notes.map { it.mapToDomain() } }
+
     override suspend fun getNewNoteId(clientId: String): String = firestoreClient.addNote(clientId)
 
     override suspend fun getNote(id: String): Result<ClientNote> =

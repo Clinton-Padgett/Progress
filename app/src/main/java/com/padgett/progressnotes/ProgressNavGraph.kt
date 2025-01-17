@@ -38,6 +38,8 @@ import com.padgett.progressnotes.ui.home.QuickNoteScreen
 import com.padgett.progressnotes.ui.home.QuickNoteViewModel
 import com.padgett.progressnotes.ui.home.SettingsScreen
 import com.padgett.progressnotes.ui.home.SettingsViewModel
+import com.padgett.progressnotes.ui.home.ViewClientNotesScreen
+import com.padgett.progressnotes.ui.home.ViewClientNotesViewModel
 
 data class NavCallbacks(
     val isLoadingOverlayVisible: (Boolean) -> Unit,
@@ -100,6 +102,7 @@ fun ProgressNavGraph(
             ClientsScreen(
                 viewModel = viewModel,
                 navigateToAddClient = navActions::navigateToAddClient,
+                navigateToViewClientNotes = navActions::navigateToViewClientNotes,
                 navigateToEditClient = navActions::navigateToEditClient
             )
         }
@@ -157,6 +160,16 @@ fun ProgressNavGraph(
             EditClientScreen(viewModel = viewModel) {
                 navController.popBackStack()
             }
+        }
+        composable(
+            route = ProgressRoute.VIEW_CLIENT_NOTES,
+            arguments = listOf(
+                navArgument(ProgressNavArgs.CLIENT_ID_ARG) { type = NavType.StringType }
+            )
+        ) {
+            val viewModel = getViewModel<ViewClientNotesViewModel>(context = context, navCallbacks = navCallbacks)
+
+            ViewClientNotesScreen(viewModel = viewModel)
         }
         composable(
             route = ProgressRoute.NOTE_ADD,

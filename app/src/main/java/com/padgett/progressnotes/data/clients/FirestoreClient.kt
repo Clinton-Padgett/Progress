@@ -132,6 +132,19 @@ class FirestoreClient @Inject constructor(private val firebaseFirestore: Firebas
                 snapshot.documents.map { it.toObject<NoteResponse>()!! }
             }
 
+    fun getNotesByClientId(clientId: String): Flow<List<NoteResponse>> =
+        notesRef
+            .where(
+                Filter.and(
+                    Filter.equalTo(FIELD_CLIENT_ID, clientId),
+                    Filter.equalTo(FIELD_CREATOR, getUserId())
+                )
+            )
+            .snapshots()
+            .map { snapshot ->
+                snapshot.documents.map { it.toObject<NoteResponse>()!! }
+            }
+
     suspend fun getNote(noteId: String): Result<NoteResponse> =
         suspendCoroutine { continuation ->
             notesRef

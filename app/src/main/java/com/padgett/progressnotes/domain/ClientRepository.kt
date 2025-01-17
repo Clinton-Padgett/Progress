@@ -15,6 +15,7 @@ interface ClientRepository {
     suspend fun getClient(id: String): Result<ClientDetails>
 
     fun getDraftNotes(): Flow<List<ClientNote>>
+    suspend fun getNotesForClient(clientId: String): Flow<List<ClientNote>>
     suspend fun getNewNoteId(clientId: String): String
     suspend fun getNote(id: String): Result<ClientNote>
     suspend fun saveNote(noteId: String, isDraft: Boolean, isApproved: Boolean, notes: String)
