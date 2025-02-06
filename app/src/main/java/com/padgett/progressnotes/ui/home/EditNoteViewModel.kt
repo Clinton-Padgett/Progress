@@ -284,6 +284,8 @@ class EditNoteViewModel @Inject constructor(
                     hideLoadingOverlay()
                 }
         } else {
+            hasUserChanges = true
+            saveChanges()
             hideLoadingOverlay()
         }
     }
