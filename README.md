@@ -47,3 +47,16 @@ The UI/UX is still basic and could use improvment but performs the basic require
 * Asynchronous: Kotlin Coroutines + Flows
 
 * Build Tools: Gradle (KTS)
+
+### Demo
+
+<img width="300" height="640" alt="Draft notes list" src="https://github.com/user-attachments/assets/3ed198ba-0303-4e9e-9990-dd8f83a9470d" />
+<img width="300" height="640" alt="Client list" src="https://github.com/user-attachments/assets/15973a01-9e85-46cf-aa2d-7000d7ad558d" />
+<img width="300" height="640" alt="Edit customer" src="https://github.com/user-attachments/assets/ed239bfa-91be-41ae-b964-8161ea755ffb" />
+<img width="300" height="640" alt="Customer progress notes" src="https://github.com/user-attachments/assets/58f35fc9-1890-4261-b9de-196f599b1007" />
+<img width="300" height="640" alt="Invoice export" src="https://github.com/user-attachments/assets/c1cad4d8-318d-4dc8-8f92-868dd29663a3" />
+
+https://github.com/user-attachments/assets/2bb2182e-0390-46b4-8b20-55e1935ac570
+
+
+
